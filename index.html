@@ -36,6 +36,11 @@
     font-weight:800; font-size:13px; animation:chippulse 1s infinite;
   }
   @keyframes chippulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+  .mute-btn{
+    background:var(--panel2); color:var(--cream); border:1px solid var(--wood);
+    border-radius:8px; font-size:15px; line-height:1; padding:4px 8px; cursor:pointer;
+  }
+  .mute-btn:hover{border-color:var(--accent);}
 
   /* Floor */
   #floor{position:relative; display:flex; flex-direction:column; padding:8px 16px 0; overflow:hidden;}
@@ -227,6 +232,9 @@
     <div class="stat" id="servedStat">🍽️ Served: 0/12</div>
     <div class="stat">💰 <span id="gold">0</span></div>
     <div class="stat">🕒 <span id="clock">8:00</span></div>
+    <div class="stat">
+      <button id="muteBtn" class="mute-btn" title="Toggle sound">🔊</button>
+    </div>
     <div class="chip hidden" id="hhChip">Tips ×2!</div>
   </div>
 </header>
@@ -238,17 +246,17 @@
 <aside id="menuDock">
   <div class="dock-head">
     <h3>📋 Today's Menu</h3>
-    <span class="hint">These are the foods available in this run. The shared board can contain foods or cat cards.</span>
+    <span class="hint">Draws are 50% food / 50% cat card. The kitchen leans toward what waiting customers need — the longer they wait, the stronger the lean.</span>
   </div>
   <div class="menu-list" id="menuReference"></div>
   <div class="menu-reference" id="nextPreview"><strong>Next draw</strong><span>Preparing…</span></div>
-  <div class="discard-zone" id="discardZone">🗑️<br><b>Sink / Discard</b><br><small>Drag any item here<br>to redraw · costs its ⚡ value</small></div>
+  <div class="discard-zone" id="discardZone">🗑️<br><b>Sink / Discard</b><br><small>Drag any item here<br>to redraw · foods ⚡≤2 · cards full ⚡</small></div>
 </aside>
 
 <footer id="cardDock">
   <div class="dock-head">
     <h3>🎴 Shared Deck Board</h3>
-    <span class="hint">Foods and cards draw from the same deck. Use or discard items to draw the next one. No free refresh.</span>
+    <span class="hint">Every draw is a coin flip: food or cat card. Use or discard items to draw the next one — stamina regenerates slowly, so plan your ⚡ budget.</span>
   </div>
   <div id="boardSlots"></div>
 </footer>
@@ -260,9 +268,9 @@
     <h2>☀️ Morning Shift</h2>
     <p>Serve <b>12 customers</b> before the café closes at 4:00 PM.<br>If the <b>Rating ⭐</b> bar hits 0, the day is lost!</p>
     <ul>
-      <li>Foods and cat cards share one six-slot board. <b>Use or discard</b> an item to draw the next one; discarded items cost their own ⚡ value.</li>
+      <li>Every draw is <b>50% food / 50% cat card</b>. The kitchen softly leans toward what waiting customers need — but there are no guarantees.</li>
       <li><b>Drag foods</b> onto customers. Wrong food is served anyway: −8⭐. <b>Red orders</b> have no food pity and require the right cat card.</li>
-      <li><b>Drag cards</b> onto customers or drop AoE cards anywhere. Food pity softly improves the odds of needed foods, but never guarantees them.</li>
+      <li><b>Drag cards</b> onto customers or drop AoE cards anywhere. <b>Stamina regenerates slowly</b> — manage your ⚡ budget carefully.</li>
       <li>Tips scale with remaining patience. <b>Angry customers drain your rating</b> — don't let them simmer!</li>
     </ul>
     <button onclick="startGame()">Open the Café</button>
@@ -280,6 +288,30 @@
 <script>
 'use strict';
 /* ============ Config ============ */
+const SFX = (() => {
+  const files = ['pickup','drop','serve','wrong','card','spawn','walkout','discard','rush','win','lose','button'];
+  const bank = {};
+  let muted = false, unlocked = false;
+  function unlock(){
+    if(unlocked) return;
+    files.forEach(n => { bank[n] = new Audio(`sfx/${n}.wav`); bank[n].preload = 'auto'; });
+    unlocked = true;
+  }
+  function play(name, vol = 1){
+    if(muted || !unlocked) return;
+    const src = bank[name];
+    if(!src) return;
+    const inst = src.cloneNode();
+    inst.volume = Math.min(1, Math.max(0, vol));
+    inst.play().catch(()=>{});
+  }
+  return {
+    unlock,
+    play,
+    toggleMute(){ muted = !muted; return muted; },
+    get muted(){ return muted; },
+  };
+})();
 const MENU = [
   {id:'milk',     emoji:'🥛', name:'Warm Milk',  cost:2},
   {id:'pawccino', emoji:'☕', name:'Pawccino',   cost:3},
@@ -296,11 +328,17 @@ const OFFMENU = [
 ];
 const CUSTOMER_EMOJI = ['🧑','👩','👨','🧓','👵','👴','🧑‍🎤','👩‍💼','👨‍🎨','🧕','👨‍🌾','👩‍🚀','🧑‍🏫','👨‍💻'];
 const ROTATE_SEC = 7;
-const STAM_MAX = 10, STAM_REGEN = 0.4;
+const STAM_MAX = 12, STAM_REGEN = 0.3;
 const DAY_SECONDS = 150, QUOTA = 12, WIN_MIN = 8;
-const PATIENCE_MAX = 22;
+const PATIENCE_MAX = 24;
+const WALKOUT_PENALTY = 9;
 const RUSH_TIMES = [75, 112.5];
 const RING_C = 2 * Math.PI * 13;
+/* Two-stage draw: 50% food / 50% card, then weighted pick within the category.
+   Soft pity only — weights ramp with a waiting customer's need, never guaranteed. */
+const DRAW = { foodShare:0.5 };
+const PITY = { foodRamp:0.30, foodCap:3, rescueRamp:0.25, rescueCap:2.5 };
+const RESCUE_CARDS = ['whiskers','wereout'];
 
 const CARDS = [
   {id:'espresso', aoe:true,  cost:1, name:'Espresso Rush',   desc:'Instantly regain 4 ⚡ stamina.',        use(g){g.stam=Math.min(STAM_MAX,g.stam+4); return '⚡ +4 Stamina!';}},
@@ -415,6 +453,7 @@ function spawnCustomer(){
     <div class="patience"><div class="fill"></div></div>`;
   c.el=el; customersEl.appendChild(el);
   G.customers.push(c);
+  SFX.play('spawn', .5);
 }
 function removeCustomer(c){
   c.el.classList.remove('hover-ok','hover-bad','angry');
@@ -693,8 +732,8 @@ function tick(ts){
     c.el.querySelector('.badges').textContent =
       (c.regal?'👑':'') + (frozen?'💤':'');
     if(c.pat <= 0){
-      G.rating -= 15;
-      toast(`😠 ${c.emoji} stormed out! −15⭐`);
+      G.rating -= WALKOUT_PENALTY;
+      toast(`😠 ${c.emoji} stormed out! −${WALKOUT_PENALTY}⭐`);
       removeCustomer(c);
     }
   }
@@ -717,6 +756,7 @@ function endRun(win){
   if(G.over) return;
   G.over=true; G.running=false;
   cancelDrag();
+  SFX.play(win ? 'win' : 'lose');
   $('endTitle').textContent = win ? '🌟 Shift Complete!' : '💥 Café Closed Early';
   const gear = win && Math.random()<0.5 ? ' and a piece of 🎩 gear' : '';
   if(win){
@@ -760,7 +800,6 @@ function sharedNewGame(){
     running:false, over:false, t:0, spawnT:1.2, spawnInterval:5.5,
     stam:STAM_MAX, rating:100, gold:0, served:0,
     customers:[], nextId:1, board:[], nextItem:null,
-    foodPity:Object.fromEntries(MENU.map(item=>[item.id,0])),
     hhUntil:-1, rushUntil:-1, rushFired:[false,false], drag:null,
   };
 }
@@ -768,12 +807,11 @@ function sharedNewGame(){
 function waitingFoodIds(){
   return new Set(G.customers.filter(c=>!c.offmenu).map(c=>c.order.id));
 }
-function weightedSharedItem(){
-  const needed = waitingFoodIds();
-  const entries = SHARED_ITEMS.map(item=>({
-    item,
-    weight:item.kind==='food' && needed.has(item.id) ? 1+G.foodPity[item.id] : 1,
-  }));
+function itemOnBoard(item){
+  return G.board.some(b=>b.id===item.id) || (G.nextItem && G.nextItem.id===item.id);
+}
+function customerWait(c){ return G.t - c.arrivedAt; }
+function pickWeighted(entries){
   const total=entries.reduce((sum,entry)=>sum+entry.weight,0);
   let roll=Math.random()*total;
   for(const entry of entries){
@@ -782,13 +820,48 @@ function weightedSharedItem(){
   }
   return entries[entries.length-1].item;
 }
+function weightedSharedItem(){
+  // Stage 1: food or card — fixed 50/50 so one big card pool can't drown out foods.
+  const wantedFood = longestWaitingFood();
+  const offmenuWait = longestOffmenuWait();
+  const asFood = item=>({...item, kind:'food'});
+  const asCard = item=>({...item, kind:'card'});
+  const foodEntries = MENU.map(item=>{
+    let weight = 1;
+    if(wantedFood && item.id===wantedFood.id && !itemOnBoard(item))
+      weight += Math.min(PITY.foodCap, PITY.foodRamp * wantedFood.wait);
+    return {item:asFood(item), weight};
+  });
+  const cardEntries = CARDS.map(item=>{
+    let weight = 1;
+    if(offmenuWait && RESCUE_CARDS.includes(item.id) && !itemOnBoard(item))
+      weight += Math.min(PITY.rescueCap, PITY.rescueRamp * Math.max(0, offmenuWait - 5));
+    return {item:asCard(item), weight};
+  });
+  const isFood = Math.random() < DRAW.foodShare;
+  return isFood ? pickWeighted(foodEntries) : pickWeighted(cardEntries);
+}
+function longestWaitingFood(){
+  let best=null;
+  for(const c of G.customers){
+    if(c.offmenu) continue;
+    const wait=customerWait(c);
+    if(!best || wait>best.wait || (wait===best.wait && c.pat<best.pat))
+      best={id:c.order.id, wait, pat:c.pat};
+  }
+  return best;
+}
+function longestOffmenuWait(){
+  let best=0;
+  for(const c of G.customers){
+    if(!c.offmenu) continue;
+    const wait=customerWait(c);
+    if(wait>best) best=wait;
+  }
+  return best || null;
+}
 function drawSharedItem(){
   const item=G.nextItem || weightedSharedItem();
-  const needed=waitingFoodIds();
-  if(needed.size){
-    if(item.kind==='food' && needed.has(item.id)) G.foodPity[item.id]=0;
-    else needed.forEach(id=>{G.foodPity[id]=Math.min(5,G.foodPity[id]+0.5);});
-  }
   G.nextItem=weightedSharedItem();
   return item;
 }
@@ -818,20 +891,19 @@ function renderSharedBoard(changedIndex=-1){
 function updateNextPreview(){
   if(!G.nextItem) return;
   nextPreviewEl.innerHTML=`<strong>Next draw</strong><span>${itemLabel(G.nextItem)} · ⚡${G.nextItem.cost}</span>`;
-  const pityActive=Object.values(G.foodPity).some(value=>value>0);
-  nextPreviewEl.style.borderColor=pityActive?'var(--pat)':'var(--wood)';
+  const needed=waitingFoodIds();
+  const waiting=G.customers.some(c=>!c.offmenu && customerWait(c)>5 && needed.has(c.order.id) && !G.board.some(b=>b.kind==='food'&&b.id===c.order.id));
+  const rescue=G.customers.some(c=>c.offmenu && customerWait(c)>8);
+  nextPreviewEl.style.borderColor=(waiting||rescue)?'var(--pat)':'var(--wood)';
 }
 function refreshSharedAffordability(){
   boardSlotsEl.querySelectorAll('.board-slot').forEach(el=>{
     const item=G.board[+el.dataset.idx];
-    const needed= item && G.stam<item.cost;
-    el.classList.toggle('disabled',needed);
-    const pity= item && item.kind==='food' && waitingFoodIds().has(item.id) && G.foodPity[item.id]>0;
-    el.classList.toggle('pity',!!pity);
+    el.classList.toggle('disabled', item && G.stam<item.cost);
   });
 }
 function initializeSharedBoard(){
-  G.board=[]; G.foodPity=Object.fromEntries(MENU.map(item=>[item.id,0])); G.nextItem=weightedSharedItem();
+  G.board=[]; G.nextItem=weightedSharedItem();
   for(let i=0;i<6;i++) G.board.push(drawSharedItem());
   let foodCount=G.board.filter(item=>item.kind==='food').length;
   for(let index=0;foodCount<2&&index<G.board.length;index++){
@@ -843,18 +915,22 @@ function replaceSharedSlot(index){
   G.board[index]=drawSharedItem();
   renderSharedBoard(index);
 }
+function discardCost(item){ return item.kind==='food' ? Math.min(item.cost,2) : item.cost; }
 function discardSharedSlot(index){
   const item=G.board[index];
-  if(G.stam<item.cost){toast(`Need ⚡${item.cost} stamina to discard`); return;}
-  G.stam-=item.cost;
+  const cost=discardCost(item);
+  if(G.stam<cost){toast(`Need ⚡${cost} stamina to discard`); return;}
+  G.stam-=cost;
+  SFX.play('discard', .7);
   replaceSharedSlot(index);
-  toast(`🗑️ Discarded ${itemLabel(item)} · next draw revealed`);
+  toast(`🗑️ Discarded ${itemLabel(item)} · −⚡${cost} · next draw revealed`);
   updateHUD();
 }
 function sharedDishServe(customer,index){
   const item=G.board[index];
   if(customer.offmenu || customer.order.id!==item.id){
     G.stam-=item.cost; G.rating-=8; customer.pat-=6;
+    SFX.play('wrong', .8);
     toast(`❌ Wrong food! ${customer.emoji} wanted ${customer.offmenu?'a special item':customer.order.emoji} · −8⭐`);
     replaceSharedSlot(index); updateHUD(); return;
   }
@@ -868,6 +944,7 @@ function sharedDishServe(customer,index){
     const bonus=Math.round(customer.tipBase/2); G.gold+=bonus;
     message+=` · Happy! +3⭐ +💰${bonus}`;
   }
+  SFX.play('serve');
   toast(message); removeCustomer(customer); replaceSharedSlot(index); updateHUD();
 }
 function useSharedCard(index,target){
@@ -875,6 +952,7 @@ function useSharedCard(index,target){
   if(G.stam<item.cost){toast(`Need ⚡${item.cost} stamina`); return;}
   if(!item.aoe && !target) return;
   G.stam-=item.cost;
+  SFX.play('card');
   const message=item.use(G,target);
   if(message) toast(message);
   replaceSharedSlot(index); updateHUD();
@@ -894,6 +972,7 @@ function startSharedDrag(event,index){
   G.drag={index,item};
   ghostEl.innerHTML=`${item.emoji||'🐾'} ${item.name} <span style="color:var(--stam)">⚡${item.cost}</span>`;
   ghostEl.classList.add('show');
+  SFX.play('pickup', .6);
   const source=boardSlotsEl.querySelector(`[data-idx="${index}"]`);
   if(source) source.classList.add('lifted');
   if(item.kind==='card' && item.aoe) floorEl.classList.add('aoe-ready');
@@ -924,13 +1003,17 @@ function sharedDragEnd(event){
   if(discard){discardSharedSlot(drag.index); return;}
   if(item.kind==='food'){
     if(customer) sharedDishServe(customer,drag.index);
+    else SFX.play('drop', .5);
     return;
   }
   if(item.aoe){
     const dock=under&&under.closest&&under.closest('#boardSlots');
     if(!dock) useSharedCard(drag.index,null);
+    else SFX.play('drop', .5);
   }else if(customer){
     useSharedCard(drag.index,customer);
+  }else{
+    SFX.play('drop', .5);
   }
 }
 function sharedCancelDrag(){
@@ -964,6 +1047,7 @@ function sharedTick(ts){
   RUSH_TIMES.forEach((time,index)=>{
     if(!G.rushFired[index]&&G.t>=time){
       G.rushFired[index]=true; G.rushUntil=G.t+20; showBanner('🔔 RUSH HOUR!');
+      SFX.play('rush', .8);
       [0,350,700].forEach(delay=>setTimeout(()=>{if(G.running&&!G.over)spawnCustomer();},delay));
     }
   });
@@ -977,9 +1061,11 @@ function sharedTick(ts){
     fill.classList.toggle('low',pct<.35&&!frozen); fill.classList.toggle('yarn',frozen);
     customer.el.classList.toggle('angry',pct<.25&&!frozen);
     customer.el.querySelector('.badges').textContent=(customer.regal?'👑':'')+(frozen?'💤':'');
-    if(customer.pat<=0){G.rating-=15; toast(`😠 ${customer.emoji} stormed out! −15⭐`); removeCustomer(customer);}
+    if(customer.pat<=0){G.rating-=WALKOUT_PENALTY; SFX.play('walkout', .8); toast(`😠 ${customer.emoji} stormed out! −${WALKOUT_PENALTY}⭐`); removeCustomer(customer);}
   }
   G.rating-=drip*dt;
+  G.pityT=(G.pityT||0)+dt;
+  if(G.pityT>0.5){ G.pityT=0; refreshSharedPreview(); }
   $('clock').textContent=clockStr(G.t);
   if(G.rating<=0){endRun(false);return;}
   if(G.served>=QUOTA){endRun(true);return;}
@@ -987,6 +1073,7 @@ function sharedTick(ts){
   updateHUD(); refreshSharedAffordability(); requestAnimationFrame(sharedTick);
 }
 function sharedStartGame(){
+  SFX.unlock();
   G=sharedNewGame(); G.running=true; last=performance.now(); customersEl.innerHTML='';
   initializeSharedBoard(); renderMenuReference(); renderSharedBoard(); updateHUD();
   $('startOverlay').classList.add('hidden'); requestAnimationFrame(sharedTick);
@@ -1017,6 +1104,13 @@ window.addEventListener('pointermove',sharedDragMove,{passive:true});
 window.addEventListener('pointerup',sharedDragEnd);
 window.addEventListener('pointercancel',sharedCancelDrag);
 window.addEventListener('load',()=>{G=sharedNewGame();initializeSharedBoard();renderMenuReference();renderSharedBoard();});
+const muteBtnEl=$('muteBtn');
+muteBtnEl.addEventListener('click',()=>{
+  SFX.unlock();
+  const muted=SFX.toggleMute();
+  muteBtnEl.textContent=muted?'🔇':'🔊';
+  if(!muted) SFX.play('button', .5);
+});
 </script>
 </body>
 </html>

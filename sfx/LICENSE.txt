@@ -1,0 +1,7 @@
+Sound effects in this folder are from:
+
+- "Interface Sounds" pack by Kenney (kenney.nl), License: Creative Commons Zero (CC0), http://creativecommons.org/publicdomain/zero/1.0/
+- "Music Jingles" pack by Kenney (kenney.nl), License: Creative Commons Zero (CC0), http://creativecommons.org/publicdomain/zero/1.0/
+
+Both packs are public domain (CC0) and free for personal, educational, and commercial use.
+Credit to Kenney (www.kenney.nl) is appreciated but not required.
