@@ -73,6 +73,52 @@
   .customer.leaving{animation:leave .6s forwards;}
   @keyframes leave{to{transform:translateY(40px) rotate(20deg); opacity:0;}}
 
+  /* Cat Crew perks */
+  #catCrew{
+    display:flex; align-items:center; gap:10px; padding:6px 12px;
+    background:var(--panel); border:2px solid var(--wood); border-radius:12px;
+    margin-bottom:8px; flex-wrap:wrap; z-index:5; flex-shrink:0;
+  }
+  .crew-label{
+    font-size:11px; font-weight:800; color:var(--accent); text-transform:uppercase;
+    letter-spacing:.8px; display:flex; align-items:center; gap:5px;
+  }
+  .crew-cats{display:flex; gap:8px; flex:1; flex-wrap:wrap;}
+  .cat-badge{
+    display:flex; align-items:center; gap:7px; background:var(--panel2);
+    border:1.5px solid var(--wood); border-radius:8px; padding:4px 9px;
+    font-size:11.5px; position:relative; flex:1; min-width:145px;
+    transition:border-color .2s, box-shadow .2s, transform .2s;
+  }
+  .cat-badge.ready{
+    border-color:var(--green); box-shadow:0 0 8px rgba(127,185,92,.25);
+  }
+  .cat-badge .cat-ico{font-size:18px; line-height:1;}
+  .cat-badge .cat-meta{display:flex; flex-direction:column; line-height:1.2; flex:1;}
+  .cat-badge .cat-name{font-weight:800; color:var(--cream); font-size:11.5px;}
+  .cat-badge .cat-desc{font-size:9.5px; opacity:.75;}
+  .cat-badge .cat-cd{
+    font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;
+    background:rgba(0,0,0,.35); white-space:nowrap;
+  }
+  .cat-badge.ready .cat-cd{
+    background:rgba(127,185,92,.25); color:var(--green); border:1px solid var(--green);
+  }
+  .cat-badge.on-cd .cat-cd{
+    color:var(--pat);
+  }
+  @keyframes cprFlash{
+    0%{box-shadow:0 0 0 6px var(--stam); filter:brightness(1.5);}
+    100%{box-shadow:none; filter:none;}
+  }
+  .cpr-flash{animation:cprFlash .6s ease-out;}
+  @keyframes popPerk{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.08); border-color:var(--accent);}
+    100%{transform:scale(1);}
+  }
+  .negotiated{animation:popPerk .6s ease-out;}
+
   #banner{
     position:absolute; top:20px; left:50%; transform:translateX(-50%);
     background:linear-gradient(160deg,#d9634f,#a33a2a); border:3px solid var(--cream);
@@ -203,6 +249,14 @@
     #menuDock .discard-zone{grid-column:2; grid-row:2; margin:0; padding:7px 4px; font-size:11px;}
     #menuDock .discard-zone small{font-size:9px;}
     #floor{order:3; flex:1; min-height:0; padding:5px 8px 0;}
+    #catCrew{padding:4px 6px; gap:4px; margin-bottom:4px;}
+    .crew-label{font-size:9.5px;}
+    .crew-cats{gap:4px;}
+    .cat-badge{min-width:100px; padding:3px 6px; font-size:10px; gap:5px;}
+    .cat-badge .cat-ico{font-size:14px;}
+    .cat-badge .cat-name{font-size:10px;}
+    .cat-badge .cat-desc{font-size:8px;}
+    .cat-badge .cat-cd{font-size:8.5px; padding:1px 4px;}
     #customers{gap:7px; padding:4px 2px; overflow:auto; align-content:flex-end;}
     .customer{width:102px; padding:5px;}
     .customer .emoji{font-size:29px;}
@@ -240,23 +294,52 @@
 </header>
 
 <div id="floor">
+  <div id="catCrew">
+    <div class="crew-label">🐾 Crew Perks</div>
+    <div class="crew-cats">
+      <div class="cat-badge ready" id="badge-milo">
+        <span class="cat-ico">🐱</span>
+        <div class="cat-meta">
+          <span class="cat-name">Milo</span>
+          <span class="cat-desc">Free Discard (10s)</span>
+        </div>
+        <span class="cat-cd" id="cd-milo">READY</span>
+      </div>
+      <div class="cat-badge ready" id="badge-ziggy">
+        <span class="cat-ico">⚡</span>
+        <div class="cat-meta">
+          <span class="cat-name">Ziggy</span>
+          <span class="cat-desc">+5⚡ if ≤2⚡ (20s)</span>
+        </div>
+        <span class="cat-cd" id="cd-ziggy">READY</span>
+      </div>
+      <div class="cat-badge ready" id="badge-cleo">
+        <span class="cat-ico">📋</span>
+        <div class="cat-meta">
+          <span class="cat-name">Cleo</span>
+          <span class="cat-desc">Fix Off-Menu (20s)</span>
+        </div>
+        <span class="cat-cd" id="cd-cleo">READY</span>
+      </div>
+    </div>
+  </div>
   <div id="customers"></div>
 </div>
 
 <aside id="menuDock">
   <div class="dock-head">
     <h3>📋 Today's Menu</h3>
-    <span class="hint">Draws are 50% food / 50% cat card. The kitchen leans toward what waiting customers need — the longer they wait, the stronger the lean.</span>
+    <span class="hint">Board holds at least 2 foods and 2 cards (50/50 for the rest). The kitchen leans toward what waiting customers need.</span>
   </div>
   <div class="menu-list" id="menuReference"></div>
   <div class="menu-reference" id="nextPreview"><strong>Next draw</strong><span>Preparing…</span></div>
-  <div class="discard-zone" id="discardZone">🗑️<br><b>Sink / Discard</b><br><small>Drag any item here<br>to redraw · foods ⚡≤2 · cards full ⚡</small></div>
+  <div class="discard-zone" id="discardZone">🗑️<br><b>Sink / Discard</b><br><small>Drag any item here to redraw<br>foods ⚡≤2 · cards full ⚡</small></div>
 </aside>
 
 <footer id="cardDock">
   <div class="dock-head">
     <h3>🎴 Shared Deck Board</h3>
-    <span class="hint">Every draw is a coin flip: food or cat card. Use or discard items to draw the next one — stamina regenerates slowly, so plan your ⚡ budget.</span>
+    <span class="hint">Guaranteed at least 2 food and 2 cat cards on the board at all times. Use your 3-cat crew perks to keep the shift running!</span>
   </div>
   <div id="boardSlots"></div>
 </footer>
@@ -268,10 +351,16 @@
     <h2>☀️ Morning Shift</h2>
     <p>Serve <b>12 customers</b> before the café closes at 4:00 PM.<br>If the <b>Rating ⭐</b> bar hits 0, the day is lost!</p>
     <ul>
-      <li>Every draw is <b>50% food / 50% cat card</b>. The kitchen softly leans toward what waiting customers need — but there are no guarantees.</li>
-      <li><b>Drag foods</b> onto customers. Wrong food is served anyway: −8⭐. <b>Red orders</b> have no food pity and require the right cat card.</li>
-      <li><b>Drag cards</b> onto customers or drop AoE cards anywhere. <b>Stamina regenerates slowly</b> — manage your ⚡ budget carefully.</li>
-      <li>Tips scale with remaining patience. <b>Angry customers drain your rating</b> — don't let them simmer!</li>
+      <li>The shared board guarantees <b>at least 2 foods and 2 cat cards</b> (50/50 for remaining slots).</li>
+      <li>Your <b>Café Crew</b> is on shift with passive perks:
+        <ul style="margin:4px 0 6px 14px; font-size:13px; text-align:left;">
+          <li>🐱 <b>Milo</b>: Grants a <b>free discard</b> every 10 seconds.</li>
+          <li>⚡ <b>Ziggy</b>: Emergency <b>+5⚡ Stamina CPR</b> when stamina drops ≤2⚡ (20s cooldown).</li>
+          <li>📋 <b>Cleo</b>: Negotiates <b>off-menu orders</b> back onto today's menu (20s cooldown).</li>
+        </ul>
+      </li>
+      <li><b>Drag foods</b> onto customers. Wrong food is served anyway: −8⭐. <b>Red orders</b> are off-menu penalties when Cleo is on cooldown.</li>
+      <li><b>Drag cards</b> onto customers or drop AoE cards anywhere. Stamina regenerates slowly — budget your ⚡!</li>
     </ul>
     <button onclick="startGame()">Open the Café</button>
   </div>
@@ -801,7 +890,91 @@ function sharedNewGame(){
     stam:STAM_MAX, rating:100, gold:0, served:0,
     customers:[], nextId:1, board:[], nextItem:null,
     hhUntil:-1, rushUntil:-1, rushFired:[false,false], drag:null,
+    cats:{ milo:0, ziggy:0, cleo:0 },
+    pityT:0,
   };
+}
+
+function isMiloReady(){ return !!(G && G.cats && G.cats.milo <= 0); }
+
+function checkZiggyCPR(){
+  if(!G || !G.running || G.over || !G.cats) return;
+  if(G.cats.ziggy <= 0 && G.stam <= 2.0){
+    G.cats.ziggy = 20;
+    G.stam = Math.min(STAM_MAX, G.stam + 5);
+    SFX.play('rush', 0.7);
+    showBanner('⚡ Ziggy: +5 Stamina CPR!');
+    toast('⚡ Ziggy jumped in with an emergency +5 Stamina! (20s CD)');
+    const bar = $('staminaBar');
+    if(bar){
+      bar.classList.add('cpr-flash');
+      setTimeout(()=>bar.classList.remove('cpr-flash'), 600);
+    }
+    updateHUD();
+    updateCatsHUD();
+  }
+}
+
+function convertOffmenuCustomer(customer){
+  if(!customer || !customer.offmenu) return;
+  const newDish = MENU[Math.floor(Math.random() * MENU.length)];
+  customer.offmenu = false;
+  customer.order = newDish;
+  customer.tipBase = 3 + newDish.cost * 2 + Math.floor(Math.random() * 5);
+  if(customer.el){
+    const orderEl = customer.el.querySelector('.order');
+    if(orderEl){
+      orderEl.className = 'order';
+      orderEl.textContent = `wants ${newDish.emoji} ${newDish.name}`;
+    }
+    customer.el.classList.add('negotiated');
+    setTimeout(() => {
+      if(customer.el) customer.el.classList.remove('negotiated');
+    }, 800);
+  }
+}
+
+function checkCleoOffmenu(){
+  if(!G || !G.running || G.over || !G.cats) return;
+  if(G.cats.cleo <= 0){
+    const offmenuCustomer = G.customers.find(c => c.offmenu);
+    if(offmenuCustomer){
+      G.cats.cleo = 20;
+      convertOffmenuCustomer(offmenuCustomer);
+      SFX.play('card', 0.8);
+      toast(`📋 Cleo persuaded ${offmenuCustomer.emoji} to order ${offmenuCustomer.order.emoji} ${offmenuCustomer.order.name}! (20s CD)`);
+      refreshSharedPreview();
+      updateCatsHUD();
+    }
+  }
+}
+
+function updateCatsHUD(){
+  if(!G || !G.cats) return;
+  const cats = [
+    {id:'milo', cdEl:$('cd-milo'), badgeEl:$('badge-milo'), time:G.cats.milo},
+    {id:'ziggy', cdEl:$('cd-ziggy'), badgeEl:$('badge-ziggy'), time:G.cats.ziggy},
+    {id:'cleo', cdEl:$('cd-cleo'), badgeEl:$('badge-cleo'), time:G.cats.cleo},
+  ];
+  cats.forEach(c => {
+    if(!c.cdEl || !c.badgeEl) return;
+    if(c.time <= 0){
+      c.badgeEl.className = 'cat-badge ready';
+      c.cdEl.textContent = 'READY';
+    } else {
+      c.badgeEl.className = 'cat-badge on-cd';
+      c.cdEl.textContent = `${c.time.toFixed(1)}s`;
+    }
+  });
+
+  if(discardZoneEl){
+    if(isMiloReady()){
+      discardZoneEl.innerHTML = `🗑️<br><b>Sink / Discard</b><br><small><b style="color:var(--green)">⚡FREE (Milo Ready!)</b><br>Drag any item here to redraw</small>`;
+    } else {
+      const cd = G.cats.milo.toFixed(1);
+      discardZoneEl.innerHTML = `🗑️<br><b>Sink / Discard</b><br><small>Drag any item here to redraw<br>foods ⚡≤2 · cards full ⚡<br><span style="color:var(--pat)">Milo: ${cd}s</span></small>`;
+    }
+  }
 }
 
 function waitingFoodIds(){
@@ -820,8 +993,22 @@ function pickWeighted(entries){
   }
   return entries[entries.length-1].item;
 }
-function weightedSharedItem(){
-  // Stage 1: food or card — fixed 50/50 so one big card pool can't drown out foods.
+
+function getForcedKind(targetSlotIndex = -1){
+  if(!G || !G.board) return null;
+  let foodCount = 0;
+  let cardCount = 0;
+  G.board.forEach((b, i) => {
+    if(i === targetSlotIndex || !b) return;
+    if(b.kind === 'food') foodCount++;
+    if(b.kind === 'card') cardCount++;
+  });
+  if(foodCount < 2) return 'food';
+  if(cardCount < 2) return 'card';
+  return null; // Both >= 2, so 50/50!
+}
+
+function weightedSharedItem(forcedKind = null){
   const wantedFood = longestWaitingFood();
   const offmenuWait = longestOffmenuWait();
   const asFood = item=>({...item, kind:'food'});
@@ -838,7 +1025,12 @@ function weightedSharedItem(){
       weight += Math.min(PITY.rescueCap, PITY.rescueRamp * Math.max(0, offmenuWait - 5));
     return {item:asCard(item), weight};
   });
-  const isFood = Math.random() < DRAW.foodShare;
+
+  let isFood;
+  if(forcedKind === 'food') isFood = true;
+  else if(forcedKind === 'card') isFood = false;
+  else isFood = Math.random() < 0.5; // 50/50 for remaining slots!
+
   return isFood ? pickWeighted(foodEntries) : pickWeighted(cardEntries);
 }
 function longestWaitingFood(){
@@ -860,12 +1052,22 @@ function longestOffmenuWait(){
   }
   return best || null;
 }
-function drawSharedItem(){
-  const item=G.nextItem || weightedSharedItem();
-  G.nextItem=weightedSharedItem();
+function drawSharedItem(targetSlotIndex = -1){
+  const forced = getForcedKind(targetSlotIndex);
+  let item;
+  if(G.nextItem && (!forced || G.nextItem.kind === forced)){
+    item = G.nextItem;
+  } else {
+    item = weightedSharedItem(forced);
+  }
+  refreshSharedPreview();
   return item;
 }
-function refreshSharedPreview(){ G.nextItem=weightedSharedItem(); updateNextPreview(); }
+function refreshSharedPreview(){
+  const forced = getForcedKind(-1);
+  G.nextItem = weightedSharedItem(forced);
+  updateNextPreview();
+}
 function itemLabel(item){ return item.kind==='food' ? `${item.emoji} ${item.name}` : `${item.name}`; }
 function renderMenuReference(){
   menuReferenceEl.innerHTML=MENU.map(item=>`<div class="menu-reference"><strong>${item.emoji} ${item.name}</strong><span>⚡${item.cost}</span></div>`).join('');
@@ -890,7 +1092,8 @@ function renderSharedBoard(changedIndex=-1){
 }
 function updateNextPreview(){
   if(!G.nextItem) return;
-  nextPreviewEl.innerHTML=`<strong>Next draw</strong><span>${itemLabel(G.nextItem)} · ⚡${G.nextItem.cost}</span>`;
+  const tag = G.nextItem.kind === 'food' ? '🍲 Food' : '🎴 Card';
+  nextPreviewEl.innerHTML=`<strong>Next draw (${tag})</strong><span>${itemLabel(G.nextItem)} · ⚡${G.nextItem.cost}</span>`;
   const needed=waitingFoodIds();
   const waiting=G.customers.some(c=>!c.offmenu && customerWait(c)>5 && needed.has(c.order.id) && !G.board.some(b=>b.kind==='food'&&b.id===c.order.id));
   const rescue=G.customers.some(c=>c.offmenu && customerWait(c)>8);
@@ -903,28 +1106,44 @@ function refreshSharedAffordability(){
   });
 }
 function initializeSharedBoard(){
-  G.board=[]; G.nextItem=weightedSharedItem();
-  for(let i=0;i<6;i++) G.board.push(drawSharedItem());
-  let foodCount=G.board.filter(item=>item.kind==='food').length;
-  for(let index=0;foodCount<2&&index<G.board.length;index++){
-    if(G.board[index].kind!=='food'){G.board[index]={...MENU[foodCount%MENU.length],kind:'food'};foodCount++;}
+  G.board=[];
+  // Guarantee at least 2 food, at least 2 cards, and 2 rolled 50/50:
+  const kinds = ['food', 'food', 'card', 'card', Math.random()<0.5?'food':'card', Math.random()<0.5?'food':'card'];
+  for(let i=kinds.length-1; i>0; i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [kinds[i], kinds[j]]=[kinds[j], kinds[i]];
   }
+  for(let i=0; i<6; i++){
+    G.board.push(weightedSharedItem(kinds[i]));
+  }
+  refreshSharedPreview();
 }
 function replaceSharedSlot(index){
-  refreshSharedPreview();
-  G.board[index]=drawSharedItem();
+  G.board[index]=drawSharedItem(index);
   renderSharedBoard(index);
 }
-function discardCost(item){ return item.kind==='food' ? Math.min(item.cost,2) : item.cost; }
+function discardCost(item){
+  if(isMiloReady()) return 0;
+  return item.kind==='food' ? Math.min(item.cost,2) : item.cost;
+}
 function discardSharedSlot(index){
   const item=G.board[index];
+  const free=isMiloReady();
   const cost=discardCost(item);
   if(G.stam<cost){toast(`Need ⚡${cost} stamina to discard`); return;}
   G.stam-=cost;
-  SFX.play('discard', .7);
+  if(free){
+    G.cats.milo=10; // 10s cooldown
+    SFX.play('card', .8);
+    toast('🐱 Milo granted a FREE Discard! (10s CD)');
+  } else {
+    SFX.play('discard', .7);
+    toast(`🗑️ Discarded ${itemLabel(item)} · −⚡${cost} · next draw revealed`);
+  }
+  checkZiggyCPR();
   replaceSharedSlot(index);
-  toast(`🗑️ Discarded ${itemLabel(item)} · −⚡${cost} · next draw revealed`);
   updateHUD();
+  updateCatsHUD();
 }
 function sharedDishServe(customer,index){
   const item=G.board[index];
@@ -932,9 +1151,11 @@ function sharedDishServe(customer,index){
     G.stam-=item.cost; G.rating-=8; customer.pat-=6;
     SFX.play('wrong', .8);
     toast(`❌ Wrong food! ${customer.emoji} wanted ${customer.offmenu?'a special item':customer.order.emoji} · −8⭐`);
+    checkZiggyCPR();
     replaceSharedSlot(index); updateHUD(); return;
   }
   G.stam-=item.cost;
+  checkZiggyCPR();
   const pct=customer.pat/customer.patMax;
   const tip=tipFor(customer,false);
   G.served++; G.gold+=tip;
@@ -952,6 +1173,7 @@ function useSharedCard(index,target){
   if(G.stam<item.cost){toast(`Need ⚡${item.cost} stamina`); return;}
   if(!item.aoe && !target) return;
   G.stam-=item.cost;
+  checkZiggyCPR();
   SFX.play('card');
   const message=item.use(G,target);
   if(message) toast(message);
@@ -1038,6 +1260,14 @@ function sharedTick(ts){
   if(!G.running) return;
   const dt=Math.min((ts-last)/1000,.1); last=ts; G.t+=dt;
   G.stam=Math.min(STAM_MAX,G.stam+STAM_REGEN*dt);
+  if(G.cats){
+    if(G.cats.milo>0) G.cats.milo=Math.max(0, G.cats.milo-dt);
+    if(G.cats.ziggy>0) G.cats.ziggy=Math.max(0, G.cats.ziggy-dt);
+    if(G.cats.cleo>0) G.cats.cleo=Math.max(0, G.cats.cleo-dt);
+    checkZiggyCPR();
+    checkCleoOffmenu();
+    updateCatsHUD();
+  }
   const dayFrac=G.t/DAY_SECONDS;
   const maxCrowd=Math.min(7,2+Math.floor(G.t/40))+(G.t<G.rushUntil?2:0);
   G.spawnT-=dt;
@@ -1075,7 +1305,7 @@ function sharedTick(ts){
 function sharedStartGame(){
   SFX.unlock();
   G=sharedNewGame(); G.running=true; last=performance.now(); customersEl.innerHTML='';
-  initializeSharedBoard(); renderMenuReference(); renderSharedBoard(); updateHUD();
+  initializeSharedBoard(); renderMenuReference(); renderSharedBoard(); updateHUD(); updateCatsHUD();
   $('startOverlay').classList.add('hidden'); requestAnimationFrame(sharedTick);
 }
 
@@ -1088,7 +1318,11 @@ function sharedUpdateHUD(){
 }
 
 const legacySpawnCustomer=spawnCustomer;
-spawnCustomer=function(){ legacySpawnCustomer(); if(G&&G.board) refreshSharedPreview(); };
+spawnCustomer=function(){
+  legacySpawnCustomer();
+  checkCleoOffmenu();
+  if(G&&G.board) refreshSharedPreview();
+};
 newGame=sharedNewGame;
 renderDishes=()=>renderSharedBoard();
 renderHand=()=>renderSharedBoard();
@@ -1103,7 +1337,7 @@ window.removeEventListener('pointercancel',cancelDrag);
 window.addEventListener('pointermove',sharedDragMove,{passive:true});
 window.addEventListener('pointerup',sharedDragEnd);
 window.addEventListener('pointercancel',sharedCancelDrag);
-window.addEventListener('load',()=>{G=sharedNewGame();initializeSharedBoard();renderMenuReference();renderSharedBoard();});
+window.addEventListener('load',()=>{G=sharedNewGame();initializeSharedBoard();renderMenuReference();renderSharedBoard();updateCatsHUD();});
 const muteBtnEl=$('muteBtn');
 muteBtnEl.addEventListener('click',()=>{
   SFX.unlock();
