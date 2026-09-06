@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capawccino — Service Run (Prototype)</title>
+<style>
+  :root{
+    --bg:#2b1f17; --panel:#3d2b1f; --panel2:#523726; --wood:#6b4a2f;
+    --cream:#f5e6d3; --accent:#e8a34f; --green:#7fb95c; --red:#d9634f;
+    --stam:#5cc3d9; --pat:#e8c94f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; user-select:none; -webkit-user-select:none;}
+  .hidden{display:none !important;}
+  body{
+    font-family:'Segoe UI', system-ui, sans-serif;
+    background:var(--bg); color:var(--cream);
+    height:100vh; overflow:hidden;
+    display:grid; grid-template-columns:1fr 320px; grid-template-rows:auto 1fr auto;
+  }
+
+  header{
+    grid-column:1/3; padding:8px 20px; background:var(--panel);
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:3px solid var(--wood); gap:16px; flex-wrap:wrap;
+  }
+  header h1{font-size:19px; color:var(--accent); white-space:nowrap;}
+  .hud{display:flex; gap:22px; align-items:center; font-size:14px; flex-wrap:wrap;}
+  .hud .stat{display:flex; align-items:center; gap:7px; font-weight:600; white-space:nowrap;}
+  .bar-wrap{width:130px; height:15px; background:#1a120c; border-radius:8px; overflow:hidden; border:1px solid #000;}
+  .bar{height:100%; border-radius:8px; transition:width .2s;}
+  #staminaBar{background:var(--stam); width:100%;}
+  #ratingBar{background:var(--green); width:100%;}
+  .chip{
+    background:var(--accent); color:#2b1f17; padding:3px 12px; border-radius:12px;
+    font-weight:800; font-size:13px; animation:chippulse 1s infinite;
+  }
+  @keyframes chippulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+
+  /* Floor */
+  #floor{position:relative; display:flex; flex-direction:column; padding:8px 16px 0; overflow:hidden;}
+  #floor.aoe-ready::after{
+    content:''; position:absolute; inset:8px; border:3px dashed var(--green);
+    border-radius:16px; opacity:.55; pointer-events:none;
+  }
+  #customers{flex:1; display:flex; flex-wrap:wrap; align-content:flex-end; gap:14px; padding:8px 4px;}
+  .customer{
+    width:126px; background:var(--panel); border:2px solid var(--wood);
+    border-radius:12px; padding:8px; text-align:center; position:relative;
+    animation:pop .25s ease-out;
+  }
+  @keyframes pop{from{transform:translateY(20px) scale(.8); opacity:0;} to{transform:none; opacity:1;}}
+  .customer .emoji{font-size:36px; line-height:1.1;}
+  .customer .order{
+    font-size:12.5px; font-weight:700; background:var(--panel2); border-radius:6px;
+    padding:2px 4px; margin:4px 0; border:2px solid transparent;
+  }
+  .customer .order.offmenu{border-color:var(--red); background:rgba(217,99,79,.18); color:#ffb3a5;}
+  .customer .patience{height:10px; background:#1a120c; border-radius:5px; overflow:hidden; margin-top:2px;}
+  .customer .patience .fill{height:100%; background:var(--pat); transition:width .1s linear;}
+  .customer .patience .fill.low{background:var(--red);}
+  .customer .patience .fill.yarn{background:var(--stam);}
+  .customer .badges{height:20px; font-size:15px; line-height:20px;}
+  .customer.hover-ok{border-color:var(--green); box-shadow:0 0 0 3px rgba(127,185,92,.55);}
+  .customer.hover-bad{border-color:var(--red); box-shadow:0 0 0 3px rgba(217,99,79,.55);}
+  .customer.angry{animation:shake .4s infinite;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-3px);}75%{transform:translateX(3px);}}
+  .customer.leaving{animation:leave .6s forwards;}
+  @keyframes leave{to{transform:translateY(40px) rotate(20deg); opacity:0;}}
+
+  #banner{
+    position:absolute; top:20px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(160deg,#d9634f,#a33a2a); border:3px solid var(--cream);
+    padding:10px 30px; border-radius:14px; font-size:24px; font-weight:900; z-index:30;
+    animation:bannerIn 2.6s forwards; white-space:nowrap;
+  }
+  @keyframes bannerIn{0%{opacity:0; transform:translateX(-50%) scale(.6);}12%,85%{opacity:1; transform:translateX(-50%) scale(1);}100%{opacity:0; transform:translateX(-50%) scale(1.15);}}
+
+  /* Menu dock */
+  #menuDock{
+    grid-column:2; grid-row:2; background:var(--panel); border-left:3px solid var(--wood);
+    padding:12px; display:flex; flex-direction:column; gap:10px; overflow:hidden;
+  }
+  .dock-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .dock-head h3{font-size:14px; color:var(--accent); text-transform:uppercase; letter-spacing:1px;}
+  .dock-head .hint{font-size:10.5px; opacity:.65; line-height:1.25; flex-basis:100%;}
+  #menuDock{grid-column:2; grid-row:2;}
+  #menuDock .menu-list{display:grid; grid-template-columns:1fr 1fr; gap:7px;}
+  .menu-reference{background:var(--panel2); border:1px solid var(--wood); border-radius:8px; padding:7px; font-size:12px;}
+  .menu-reference strong{display:block; font-size:13px; margin-bottom:2px;}
+  .discard-zone{margin-top:auto; border:2px dashed var(--red); border-radius:12px; padding:14px 10px; text-align:center; color:#f0b2a4; touch-action:none;}
+  .discard-zone.hover{background:rgba(217,99,79,.2); border-color:var(--accent);}
+
+  /* Shared food/card board */
+  #boardSlots{display:grid; grid-template-columns:repeat(6,1fr); gap:10px; max-width:1100px; margin:0 auto; width:100%;}
+  .board-slot{
+    min-height:96px; background:var(--panel2); border:2px solid var(--wood); border-radius:12px;
+    padding:9px; cursor:grab; touch-action:none; position:relative; text-align:left;
+  }
+  .board-slot:active{cursor:grabbing;}
+  .board-slot.food{border-color:#ad7b4a;}
+  .board-slot.card{background:linear-gradient(160deg,#8a5a33,#5c3a1e); border-color:var(--accent);}
+  .board-slot .item-emoji{font-size:29px; line-height:1;}
+  .board-slot .item-name{display:block; font-weight:800; font-size:13px; margin-top:6px;}
+  .board-slot .item-desc{display:block; font-size:10.5px; line-height:1.25; opacity:.86; margin-top:4px;}
+  .board-slot .item-cost{position:absolute; right:8px; top:8px; color:var(--stam); font-weight:800; font-size:12px;}
+  .board-slot .item-type{font-size:10px; opacity:.65; text-transform:uppercase;}
+  .board-slot.disabled{opacity:.4; cursor:not-allowed;}
+  .board-slot.lifted{opacity:.22;}
+  .board-slot.pity{box-shadow:0 0 0 3px var(--pat);}
+  .board-slot.rerolled{animation:flash .45s;}
+  @keyframes flash{0%{box-shadow:0 0 0 4px var(--accent); transform:scale(1.04);}100%{box-shadow:none; transform:none;}}
+
+  /* Card dock */
+  #cardDock{
+    grid-column:1/3; grid-row:3; background:var(--panel); border-top:3px solid var(--wood);
+    padding:8px 18px 12px; display:flex; flex-direction:column; gap:8px;
+  }
+  #cardSlots{display:block;}
+  .card-slot{
+    background:linear-gradient(160deg,#8a5a33,#5c3a1e); border:2px solid var(--accent);
+    border-radius:12px; padding:10px; cursor:grab; touch-action:none;
+    color:var(--cream); position:relative; min-height:88px; font-family:inherit; text-align:left;
+  }
+  .card-slot:active{cursor:grabbing;}
+  .card-slot .c-cost{position:absolute; top:8px; left:10px; color:var(--stam); font-weight:800; font-size:13px;}
+  .card-slot .c-target{
+    position:absolute; top:8px; right:8px; font-size:9.5px; font-weight:800; padding:2px 8px;
+    border-radius:10px; background:rgba(0,0,0,.35); text-transform:uppercase; letter-spacing:.5px;
+  }
+  .card-slot .c-target.tgt{color:#9fdcf0;}
+  .card-slot .c-target.aoe{color:#b8f09a;}
+  .card-slot .c-name{margin-top:20px; font-weight:800; font-size:15px;}
+  .card-slot .c-desc{font-size:11.5px; opacity:.88; margin-top:3px; line-height:1.3;}
+  .card-slot.disabled{opacity:.4; cursor:not-allowed;}
+  .card-slot.lifted{opacity:.22;}
+
+  /* Drag ghost */
+  #ghost{
+    position:fixed; z-index:100; pointer-events:none;
+    transform:translate(-50%,-120%) rotate(-4deg);
+    background:var(--panel2); border:2px solid var(--accent); border-radius:12px;
+    padding:8px 16px; font-weight:800; font-size:16px; white-space:nowrap;
+    box-shadow:0 10px 26px rgba(0,0,0,.55); display:none;
+  }
+  #ghost.show{display:block;}
+
+  /* Overlays */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:50; display:flex; align-items:center; justify-content:center;}
+  .dialog{
+    background:var(--panel); border:3px solid var(--accent); border-radius:16px;
+    padding:30px 44px; text-align:center; max-width:560px; line-height:1.55; font-size:15px;
+  }
+  .dialog h2{color:var(--accent); font-size:26px; margin-bottom:12px;}
+  .dialog p{margin-bottom:16px;}
+  .dialog ul{text-align:left; margin:0 0 18px 18px;}
+  .dialog li{margin-bottom:7px;}
+  .dialog button{
+    font-size:17px; padding:10px 30px; border-radius:10px; border:none;
+    background:var(--accent); color:#2b1f17; font-weight:800; cursor:pointer;
+  }
+  .toast{
+    position:fixed; top:64px; left:50%; transform:translateX(-50%);
+    background:var(--panel2); border:2px solid var(--accent); border-radius:10px;
+    padding:7px 18px; font-weight:700; z-index:60; pointer-events:none;
+    animation:fadeup 1.6s forwards; max-width:80vw; text-align:center;
+  }
+  @keyframes fadeup{0%{opacity:0; transform:translate(-50%,10px);}15%,80%{opacity:1; transform:translate(-50%,0);}100%{opacity:0;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐱 Capawccino — Day Shift ☕</h1>
+  <div class="hud">
+    <div class="stat">⭐ Rating <div class="bar-wrap"><div class="bar" id="ratingBar"></div></div></div>
+    <div class="stat">⚡ Stamina <div class="bar-wrap"><div class="bar" id="staminaBar"></div></div></div>
+    <div class="stat" id="servedStat">🍽️ Served: 0/12</div>
+    <div class="stat">💰 <span id="gold">0</span></div>
+    <div class="stat">🕒 <span id="clock">8:00</span></div>
+    <div class="chip hidden" id="hhChip">Tips ×2!</div>
+  </div>
+</header>
+
+<div id="floor">
+  <div id="customers"></div>
+</div>
+
+<aside id="menuDock">
+  <div class="dock-head">
+    <h3>📋 Today's Menu</h3>
+    <span class="hint">These are the foods available in this run. The shared board can contain foods or cat cards.</span>
+  </div>
+  <div class="menu-list" id="menuReference"></div>
+  <div class="menu-reference" id="nextPreview"><strong>Next draw</strong><span>Preparing…</span></div>
+  <div class="discard-zone" id="discardZone">🗑️<br><b>Sink / Discard</b><br><small>Drag any item here<br>to redraw · costs its ⚡ value</small></div>
+</aside>
+
+<footer id="cardDock">
+  <div class="dock-head">
+    <h3>🎴 Shared Deck Board</h3>
+    <span class="hint">Foods and cards draw from the same deck. Use or discard items to draw the next one. No free refresh.</span>
+  </div>
+  <div id="boardSlots"></div>
+</footer>
+
+<div id="ghost"></div>
+
+<div class="overlay" id="startOverlay">
+  <div class="dialog">
+    <h2>☀️ Morning Shift</h2>
+    <p>Serve <b>12 customers</b> before the café closes at 4:00 PM.<br>If the <b>Rating ⭐</b> bar hits 0, the day is lost!</p>
+    <ul>
+      <li>Foods and cat cards share one six-slot board. <b>Use or discard</b> an item to draw the next one; discarded items cost their own ⚡ value.</li>
+      <li><b>Drag foods</b> onto customers. Wrong food is served anyway: −8⭐. <b>Red orders</b> have no food pity and require the right cat card.</li>
+      <li><b>Drag cards</b> onto customers or drop AoE cards anywhere. Food pity softly improves the odds of needed foods, but never guarantees them.</li>
+      <li>Tips scale with remaining patience. <b>Angry customers drain your rating</b> — don't let them simmer!</li>
+    </ul>
+    <button onclick="startGame()">Open the Café</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+  <div class="dialog">
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <button onclick="location.reload()">New Shift</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============ Config ============ */
+const MENU = [
+  {id:'milk',     emoji:'🥛', name:'Warm Milk',  cost:2},
+  {id:'pawccino', emoji:'☕', name:'Pawccino',   cost:3},
+  {id:'fish',     emoji:'🐟', name:'Fish Snack', cost:3},
+  {id:'cake',     emoji:'🍰', name:'Cat-Cake',   cost:4},
+];
+const OFFMENU = [
+  {id:'ramen',     emoji:'🍜', name:'Ramen'},
+  {id:'waffle',    emoji:'🧇', name:'Waffle'},
+  {id:'boba',      emoji:'🧋', name:'Boba Tea'},
+  {id:'sundae',    emoji:'🍦', name:'Sundae'},
+  {id:'croissant', emoji:'🥐', name:'Croissant'},
+  {id:'taco',      emoji:'🌮', name:'Taco'},
+];
+const CUSTOMER_EMOJI = ['🧑','👩','👨','🧓','👵','👴','🧑‍🎤','👩‍💼','👨‍🎨','🧕','👨‍🌾','👩‍🚀','🧑‍🏫','👨‍💻'];
+const ROTATE_SEC = 7;
+const STAM_MAX = 10, STAM_REGEN = 0.3;
+const DAY_SECONDS = 150, QUOTA = 12, WIN_MIN = 8;
+const PATIENCE_MAX = 22;
+const RUSH_TIMES = [75, 112.5];
+const RING_C = 2 * Math.PI * 13;
+
+const CARDS = [
+  {id:'espresso', aoe:true,  cost:1, name:'Espresso Rush',   desc:'Instantly regain 4 ⚡ stamina.',        use(g){g.stam=Math.min(STAM_MAX,g.stam+4); return '⚡ +4 Stamina!';}},
+  {id:'aroma',    aoe:true,  cost:2, name:'Fresh Aroma',     desc:'All customers regain half their patience.', use(g){g.customers.forEach(c=>{c.pat=Math.min(c.patMax,c.pat+c.patMax/2);}); return '🌸 Everyone relaxes.';}},
+  {id:'fivestar', aoe:true,  cost:3, name:'Five-Star Review',desc:'Recover 20% Café Rating.',             use(g){g.rating=Math.min(100,g.rating+20); return '⭐ Rating +20!';}},
+  {id:'buffet',   aoe:true,  cost:3, name:'Treat Buffet',    desc:'Reroll all dishes now — they will match waiting customers.', use(g){rerollDishes(true); g.boardT=ROTATE_SEC; return '🍽️ The kitchen covers everyone!';}},
+  {id:'happyhour',aoe:true,  cost:2, name:'Happy Hour',     desc:'Tips are doubled for 12 seconds.',     use(g){g.hhUntil=g.t+12; return '🎉 Tips ×2 for 12s!';}},
+  {id:'purr',     aoe:false, cost:2, name:'Calming Purr',    desc:"Target's patience refills fully.",     use(g,t){t.pat=t.patMax; return '😌 Patience restored!';}},
+  {id:'yarn',     aoe:false, cost:1, name:'Yarn Ball',       desc:'Target gets distracted: patience frozen for 8s.', use(g,t){t.yarnUntil=g.t+8; return '🧶 Target distracted!';}},
+  {id:'persian',  aoe:false, cost:1, name:'Regal Persian',   desc:"Target's tip is tripled.",             use(g,t){t.regal=true; return '👑 Tip ×3!';}},
+  {id:'whiskers', aoe:false, cost:3, name:'Speedy Whiskers', desc:'Perfectly serve target instantly — any order.', use(g,t){servePerfect(t); return null;}},
+  {id:'wereout',  aoe:false, cost:1, name:"We're Out",       desc:'Politely turn target away — no rating loss.', use(g,t){dismissCustomer(t); return null;}},
+];
+
+/* ============ State ============ */
+let G;
+
+function newGame(){
+  return {
+    running:false, over:false, t:0,
+    spawnT:1.2, spawnInterval:5.5,
+    stam:STAM_MAX, rating:100, gold:0, served:0,
+    customers:[], nextId:1,
+    dishes:[randDish(), randDish(), randDish()],
+    hand:[null, null, null],
+    boardT:ROTATE_SEC, hhUntil:-1, rushUntil:-1,
+    rushFired:[false,false],
+    drag:null,
+  };
+}
+
+/* ============ DOM ============ */
+const $ = id => document.getElementById(id);
+const customersEl=$('customers'), dishSlotsEl=$('dishSlots'), cardSlotsEl=$('cardSlots'),
+      ghostEl=$('ghost'), floorEl=$('floor'), ringFg=$('ringFg');
+
+function randDish(){ return MENU[Math.floor(Math.random()*MENU.length)]; }
+function newRandCard(){
+  const ids = G.hand.filter(Boolean).map(c=>c.id);
+  const offmenuWaiting = G.customers.some(c=>c.offmenu && (G.t - c.arrivedAt) >= 5);
+  if(offmenuWaiting){
+    const pity = ['whiskers','wereout'].filter(id=>!ids.includes(id));
+    if(pity.length) return CARDS.find(c=>c.id===pity[Math.floor(Math.random()*pity.length)]);
+  }
+  const pool = CARDS.filter(c=>!ids.includes(c.id));
+  return pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+}
+
+function renderDishes(flash){
+  const old = dishSlotsEl.querySelectorAll('.dish-slot');
+  const oldIds = [...old].map(el=>el.dataset.id);
+  dishSlotsEl.innerHTML='';
+  G.dishes.forEach((d,i)=>{
+    const el=document.createElement('div');
+    el.className='dish-slot'; el.dataset.id=d.id; el.dataset.idx=i;
+    el.innerHTML=`<span class="d-emoji">${d.emoji}</span><span class="d-name">${d.name}</span><span class="d-cost">⚡${d.cost}</span>`;
+    el.addEventListener('pointerdown', e=>startDrag(e,'dish',i));
+    if(flash && oldIds[i]!==d.id) el.classList.add('rerolled');
+    dishSlotsEl.appendChild(el);
+  });
+  refreshAffordability();
+}
+
+function renderHand(){
+  cardSlotsEl.innerHTML='';
+  G.hand.forEach((c,i)=>{
+    if(!c) return;
+    const el=document.createElement('div');
+    el.className='card-slot'; el.dataset.cost=c.cost; el.dataset.idx=i;
+    el.innerHTML=`
+      <span class="c-cost">⚡${c.cost}</span>
+      <span class="c-target ${c.aoe?'aoe':'tgt'}">${c.aoe?'AoE · anywhere':'Single · customer'}</span>
+      <div class="c-name">${c.name}</div>
+      <div class="c-desc">${c.desc}</div>`;
+    el.addEventListener('pointerdown', e=>startDrag(e,'card',i));
+    cardSlotsEl.appendChild(el);
+  });
+  refreshAffordability();
+}
+
+function refreshAffordability(){
+  dishSlotsEl.querySelectorAll('.dish-slot').forEach(el=>{
+    const d = G.dishes[+el.dataset.idx];
+    el.classList.toggle('disabled', !d || G.stam < d.cost);
+  });
+  cardSlotsEl.querySelectorAll('.card-slot').forEach(el=>{
+    const c = G.hand[+el.dataset.idx];
+    el.classList.toggle('disabled', !c || G.stam < c.cost);
+  });
+}
+
+/* ============ Customers ============ */
+function spawnCustomer(){
+  const offmenuChance = 0.20 + 0.10 * (G.t / DAY_SECONDS);
+  const offmenu = Math.random() < offmenuChance;
+  const order = offmenu
+    ? OFFMENU[Math.floor(Math.random()*OFFMENU.length)]
+    : MENU[Math.floor(Math.random()*MENU.length)];
+  const c = {
+    id:G.nextId++, order, offmenu,
+    emoji:CUSTOMER_EMOJI[(G.nextId-2)%CUSTOMER_EMOJI.length],
+    pat:PATIENCE_MAX, patMax:PATIENCE_MAX,
+    tipBase: offmenu ? 8+Math.floor(Math.random()*7) : 3+order.cost*2+Math.floor(Math.random()*5),
+    regal:false, yarnUntil:-1, arrivedAt:G.t, el:null,
+  };
+  const el=document.createElement('div');
+  el.className='customer'; el.dataset.cid=c.id;
+  el.innerHTML=`
+    <div class="emoji">${c.emoji}</div>
+    <div class="order${offmenu?' offmenu':''}">wants ${order.emoji} ${order.name}</div>
+    <div class="badges"></div>
+    <div class="patience"><div class="fill"></div></div>`;
+  c.el=el; customersEl.appendChild(el);
+  G.customers.push(c);
+}
+function removeCustomer(c){
+  c.el.classList.remove('hover-ok','hover-bad','angry');
+  c.el.classList.add('leaving');
+  setTimeout(()=>c.el.remove(), 620);
+  G.customers = G.customers.filter(x=>x!==c);
+}
+function dismissCustomer(c){
+  removeCustomer(c);
+  toast(`👋 ${c.emoji} turned away politely — no penalty`);
+}
+function customerAt(x,y){
+  const el=document.elementFromPoint(x,y);
+  if(!el || !el.closest) return null;
+  const cEl=el.closest('.customer');
+  if(!cEl) return null;
+  return G.customers.find(c=>String(c.id)===cEl.dataset.cid) || null;
+}
+
+/* ============ Serving ============ */
+function tipFor(c, perfect){
+  const pct = Math.max(0, c.pat/c.patMax);
+  let tip = Math.round(c.tipBase * (0.4 + 0.6*pct));
+  if(perfect) tip = Math.round(tip*1.5);
+  if(c.regal) tip *= 3;
+  if(G.t < G.hhUntil) tip *= 2;
+  return tip;
+}
+function serveDish(c, slotIdx){
+  const d = G.dishes[slotIdx];
+  G.stam -= d.cost;
+  const pct = c.pat/c.patMax;
+  const tip = tipFor(c, false);
+  G.served++; G.gold += tip;
+  let msg = `✅ ${c.emoji} loved the ${d.name}! +💰${tip}`;
+  if(pct > 0.6){
+    G.rating = Math.min(100, G.rating+3);
+    const bonus = Math.round(c.tipBase/2);
+    G.gold += bonus;
+    msg += ` · Happy! +3⭐ +💰${bonus}`;
+  }
+  toast(msg);
+  removeCustomer(c);
+  G.dishes[slotIdx] = randDish();
+  ensureDishMatch();
+  renderDishes(true);
+  updateHUD();
+}
+function wrongServe(c, slotIdx){
+  const d = G.dishes[slotIdx];
+  G.stam -= d.cost;
+  G.rating -= 8;
+  c.pat -= 6;
+  toast(`❌ Wrong order! ${c.emoji} wanted ${c.offmenu?'a special item':c.order.emoji} · −8⭐`);
+  G.dishes[slotIdx] = randDish();
+  ensureDishMatch();
+  renderDishes(true);
+  updateHUD();
+}
+function servePerfect(c){
+  const pct = c.pat/c.patMax;
+  const tip = tipFor(c, true);
+  G.served++; G.gold += tip;
+  let msg = `✨ Whiskers speed-served ${c.emoji}! +💰${tip}`;
+  if(pct > 0.6){
+    G.rating = Math.min(100, G.rating+3);
+    const bonus = Math.round(c.tipBase/2);
+    G.gold += bonus;
+    msg += ` · Happy! +3⭐ +💰${bonus}`;
+  }
+  toast(msg);
+  removeCustomer(c);
+  updateHUD();
+}
+
+/* ============ Dish rotation ============ */
+function ensureDishMatch(){
+  const waiters = G.customers.filter(c=>!c.offmenu);
+  if(!waiters.length) return;
+  const draggedIdx = (G.drag && G.drag.type==='dish') ? G.drag.idx : -1;
+  const liveIds = G.dishes.map(d=>d && d.id);
+  const covered = waiters.some(c=>liveIds.includes(c.order.id));
+  if(covered) return;
+  const free = [0,1,2].filter(i=>i!==draggedIdx);
+  if(!free.length) return;
+  const w = waiters[Math.floor(Math.random()*waiters.length)];
+  G.dishes[free[Math.floor(Math.random()*free.length)]] = w.order;
+}
+function rerollDishes(guarantee){
+  const draggedIdx = (G.drag && G.drag.type==='dish') ? G.drag.idx : -1;
+  for(let i=0;i<3;i++){
+    if(i===draggedIdx) continue;
+    G.dishes[i] = randDish();
+  }
+  if(guarantee) ensureDishMatch();
+  renderDishes(true);
+}
+
+/* ============ Cards ============ */
+function initHand(){
+  const ids=[];
+  for(let i=0;i<3;i++){
+    const pool=CARDS.filter(c=>!ids.includes(c.id));
+    const c=pool[Math.floor(Math.random()*pool.length)];
+    ids.push(c.id); G.hand[i]=c;
+  }
+}
+function playCard(idx, target){
+  const card = G.hand[idx];
+  if(G.stam < card.cost){ toast('Not enough ⚡ stamina'); return; }
+  if(!card.aoe && !target) return;
+  G.stam -= card.cost;
+  const msg = card.use(G, target);
+  if(msg) toast(msg);
+  G.hand[idx] = newRandCard();
+  renderHand();
+  updateHUD();
+}
+
+/* ============ Drag & drop ============ */
+function startDrag(e, type, idx){
+  if(!G.running || G.drag) return;
+  e.preventDefault();
+  const item = type==='dish' ? G.dishes[idx] : G.hand[idx];
+  if(!item) return;
+  if(G.stam < item.cost){ toast(`Need ⚡${item.cost} stamina`); return; }
+  G.drag = {type, idx, item};
+  ghostEl.innerHTML = type==='dish'
+    ? `${item.emoji} <span style="color:var(--stam)">⚡${item.cost}</span>`
+    : `${item.name} <span style="color:var(--stam)">⚡${item.cost}</span>`;
+  ghostEl.classList.add('show');
+  const src = (type==='dish'?dishSlotsEl:cardSlotsEl).querySelector(`[data-idx="${idx}"]`);
+  if(src) src.classList.add('lifted');
+  if(type==='card' && item.aoe) floorEl.classList.add('aoe-ready');
+  moveGhost(e.clientX, e.clientY);
+}
+function moveGhost(x,y){
+  ghostEl.style.left = x+'px';
+  ghostEl.style.top = y+'px';
+}
+function clearHover(){
+  G.customers.forEach(c=>c.el.classList.remove('hover-ok','hover-bad'));
+}
+function onDragMove(e){
+  if(!G.drag) return;
+  moveGhost(e.clientX, e.clientY);
+  clearHover();
+  const c = customerAt(e.clientX, e.clientY);
+  if(G.drag.type==='dish'){
+    if(c) c.el.classList.add(c && !c.offmenu && c.order.id===G.drag.item.id ? 'hover-ok' : 'hover-bad');
+  } else if(!G.drag.item.aoe){
+    if(c) c.el.classList.add('hover-ok');
+  }
+}
+function onDragEnd(e){
+  if(!G.drag) return;
+  const drag = G.drag;
+  const c = customerAt(e.clientX, e.clientY);
+  clearHover();
+  ghostEl.classList.remove('show');
+  floorEl.classList.remove('aoe-ready');
+  const src = (drag.type==='dish'?dishSlotsEl:cardSlotsEl).querySelector(`[data-idx="${drag.idx}"]`);
+  if(src) src.classList.remove('lifted');
+  G.drag = null;
+
+  if(drag.type==='dish'){
+    if(c){
+      if(!c.offmenu && c.order.id===drag.item.id) serveDish(c, drag.idx);
+      else wrongServe(c, drag.idx);
+    }
+    return;
+  }
+  const card = drag.item;
+  if(card.aoe){
+    const over = document.elementFromPoint(e.clientX, e.clientY);
+    if(over && over.closest && (over.closest('#cardDock') || over.closest('#menuDock'))) return;
+    playCard(drag.idx, null);
+  } else {
+    if(c) playCard(drag.idx, c);
+  }
+}
+function cancelDrag(){
+  if(!G.drag) return;
+  const src = (G.drag.type==='dish'?dishSlotsEl:cardSlotsEl).querySelector(`[data-idx="${G.drag.idx}"]`);
+  if(src) src.classList.remove('lifted');
+  clearHover();
+  ghostEl.classList.remove('show');
+  floorEl.classList.remove('aoe-ready');
+  G.drag = null;
+}
+window.addEventListener('pointermove', onDragMove, {passive:true});
+window.addEventListener('pointerup', onDragEnd);
+window.addEventListener('pointercancel', cancelDrag);
+window.addEventListener('contextmenu', e=>{ if(G && G.drag) e.preventDefault(); });
+
+/* ============ HUD ============ */
+function updateHUD(){
+  $('staminaBar').style.width = (Math.max(0,G.stam)/STAM_MAX*100)+'%';
+  const rb=$('ratingBar');
+  rb.style.width = Math.max(0, G.rating)+'%';
+  rb.style.background = G.rating>60 ? 'var(--green)' : G.rating>30 ? 'var(--pat)' : 'var(--red)';
+  $('gold').textContent = G.gold;
+  $('servedStat').textContent = `🍽️ Served: ${G.served}/${QUOTA}`;
+  $('hhChip').classList.toggle('hidden', G.t >= G.hhUntil);
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),1650);
+}
+function clockStr(t){
+  const total = 480 + Math.floor(t/DAY_SECONDS*480);
+  return `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`;
+}
+function showBanner(text){
+  const b=document.createElement('div');
+  b.id='banner'; b.textContent=text;
+  floorEl.appendChild(b);
+  setTimeout(()=>b.remove(), 2700);
+}
+
+/* ============ Main loop ============ */
+let last=0;
+function tick(ts){
+  if(!G.running) return;
+  const dt = Math.min((ts-last)/1000, .1); last=ts;
+  G.t += dt;
+  const dayFrac = G.t / DAY_SECONDS;
+
+  G.stam = Math.min(STAM_MAX, G.stam + STAM_REGEN*dt);
+
+  // shared board rotation
+  G.boardT -= dt;
+  if(G.boardT <= 0){
+    G.boardT = ROTATE_SEC;
+    rerollDishes(true);
+  }
+  ringFg.style.strokeDasharray = RING_C;
+  ringFg.style.strokeDashoffset = RING_C * (1 - Math.max(0,G.boardT)/ROTATE_SEC);
+
+  // rush waves
+  RUSH_TIMES.forEach((rt,i)=>{
+    if(!G.rushFired[i] && G.t >= rt){
+      G.rushFired[i]=true;
+      G.rushUntil = G.t + 20;
+      showBanner('🔔 RUSH HOUR!');
+      [0,350,700].forEach(delay=>{
+        setTimeout(()=>{ if(G.running && !G.over) spawnCustomer(); }, delay);
+      });
+    }
+  });
+
+  // spawning
+  const maxCrowd = Math.min(7, 2 + Math.floor(G.t/40)) + (G.t < G.rushUntil ? 2 : 0);
+  G.spawnT -= dt;
+  if(G.spawnT<=0 && G.t<DAY_SECONDS && G.customers.length<maxCrowd && G.served+G.customers.length<QUOTA){
+    spawnCustomer();
+    G.spawnInterval = Math.max(2.2, 5.5 - G.t*0.022);
+    G.spawnT = G.spawnInterval;
+  }
+
+  // patience drain, angry drip, walk-outs
+  const drainMult = 1 + 0.8*dayFrac;
+  let drip = 0;
+  for(const c of [...G.customers]){
+    const frozen = G.t < c.yarnUntil;
+    if(!frozen) c.pat -= dt * drainMult;
+    const pct = Math.max(0, c.pat/c.patMax);
+    if(pct < 0.25) drip += 0.7;
+    const fill = c.el.querySelector('.fill');
+    fill.style.width = (pct*100)+'%';
+    fill.classList.toggle('low', pct<0.35 && !frozen);
+    fill.classList.toggle('yarn', frozen);
+    c.el.classList.toggle('angry', pct<0.25 && !frozen);
+    c.el.querySelector('.badges').textContent =
+      (c.regal?'👑':'') + (frozen?'💤':'');
+    if(c.pat <= 0){
+      G.rating -= 15;
+      toast(`😠 ${c.emoji} stormed out! −15⭐`);
+      removeCustomer(c);
+    }
+  }
+  G.rating -= drip*dt;
+
+  $('clock').textContent = clockStr(G.t);
+
+  if(G.rating <= 0){ endRun(false); return; }
+  if(G.served >= QUOTA){ endRun(true); return; }
+  if(G.t >= DAY_SECONDS && G.customers.length===0){
+    endRun(G.served >= WIN_MIN);
+    return;
+  }
+  updateHUD();
+  refreshAffordability();
+  requestAnimationFrame(tick);
+}
+
+function endRun(win){
+  if(G.over) return;
+  G.over=true; G.running=false;
+  cancelDrag();
+  $('endTitle').textContent = win ? '🌟 Shift Complete!' : '💥 Café Closed Early';
+  const gear = win && Math.random()<0.5 ? ' and a piece of 🎩 gear' : '';
+  if(win){
+    $('endText').innerHTML =
+      `You served <b>${G.served}</b> customers and earned <b>💰${G.gold} Gold</b>${gear}!<br>` +
+      (G.served>=QUOTA ? 'Quota smashed — back to the café hub with your loot.'
+                      : `The day ended with ${G.served}/${QUOTA} served — you survived the shift and kept the rating up.`);
+  } else {
+    $('endText').innerHTML =
+      `The rating hit zero…<br>Served: <b>${G.served}/${QUOTA}</b> · Earned: <b>💰${Math.floor(G.gold*0.4)} Gold</b> (reduced on loss)<br>The cats will do better tomorrow.`;
+  }
+  $('endOverlay').classList.remove('hidden');
+}
+
+/* ============ Start ============ */
+function startGame(){
+  G = newGame();
+  G.running = true; last = performance.now();
+  customersEl.innerHTML = '';
+  initHand();
+  renderDishes(false);
+  renderHand();
+  updateHUD();
+  $('startOverlay').classList.add('hidden');
+  requestAnimationFrame(tick);
+}
+window.addEventListener('load', ()=>{ G = newGame(); renderDishes(false); renderHand(); });
+
+/* Shared food and card deck implementation */
+const boardSlotsEl = $('boardSlots');
+const discardZoneEl = $('discardZone');
+const nextPreviewEl = $('nextPreview');
+const menuReferenceEl = $('menuReference');
+const SHARED_ITEMS = [
+  ...MENU.map(item=>({...item, kind:'food'})),
+  ...CARDS.map(item=>({...item, kind:'card'})),
+];
+
+function sharedNewGame(){
+  return {
+    running:false, over:false, t:0, spawnT:1.2, spawnInterval:5.5,
+    stam:STAM_MAX, rating:100, gold:0, served:0,
+    customers:[], nextId:1, board:[], nextItem:null,
+    foodPity:Object.fromEntries(MENU.map(item=>[item.id,0])),
+    hhUntil:-1, rushUntil:-1, rushFired:[false,false], drag:null,
+  };
+}
+
+function waitingFoodIds(){
+  return new Set(G.customers.filter(c=>!c.offmenu).map(c=>c.order.id));
+}
+function weightedSharedItem(){
+  const needed = waitingFoodIds();
+  const entries = SHARED_ITEMS.map(item=>({
+    item,
+    weight:item.kind==='food' && needed.has(item.id) ? 1+G.foodPity[item.id] : 1,
+  }));
+  const total=entries.reduce((sum,entry)=>sum+entry.weight,0);
+  let roll=Math.random()*total;
+  for(const entry of entries){
+    roll-=entry.weight;
+    if(roll<=0) return entry.item;
+  }
+  return entries[entries.length-1].item;
+}
+function drawSharedItem(){
+  const item=G.nextItem || weightedSharedItem();
+  const needed=waitingFoodIds();
+  if(needed.size){
+    if(item.kind==='food' && needed.has(item.id)) G.foodPity[item.id]=0;
+    else needed.forEach(id=>{G.foodPity[id]=Math.min(5,G.foodPity[id]+0.5);});
+  }
+  G.nextItem=weightedSharedItem();
+  return item;
+}
+function refreshSharedPreview(){ G.nextItem=weightedSharedItem(); updateNextPreview(); }
+function itemLabel(item){ return item.kind==='food' ? `${item.emoji} ${item.name}` : `${item.name}`; }
+function renderMenuReference(){
+  menuReferenceEl.innerHTML=MENU.map(item=>`<div class="menu-reference"><strong>${item.emoji} ${item.name}</strong><span>⚡${item.cost}</span></div>`).join('');
+}
+function renderSharedBoard(changedIndex=-1){
+  const old=boardSlotsEl.querySelectorAll('.board-slot');
+  const oldIds=[...old].map(el=>el.dataset.id);
+  boardSlotsEl.innerHTML='';
+  G.board.forEach((item,index)=>{
+    const el=document.createElement('div');
+    el.className=`board-slot ${item.kind}`;
+    el.dataset.idx=index; el.dataset.id=item.id;
+    const type=item.kind==='food'?'Food':'Cat card';
+    const detail=item.kind==='card' ? item.desc : 'Serve customer';
+    el.innerHTML=`<span class="item-cost">⚡${item.cost}</span><span class="item-emoji">${item.emoji||'🐾'}</span><span class="item-name">${item.name}</span><span class="item-type">${type}</span><span class="item-desc">${detail}</span>`;
+    el.addEventListener('pointerdown',event=>startSharedDrag(event,index));
+    if(oldIds[index]!==item.id || index===changedIndex) el.classList.add('rerolled');
+    boardSlotsEl.appendChild(el);
+  });
+  updateNextPreview();
+  refreshSharedAffordability();
+}
+function updateNextPreview(){
+  if(!G.nextItem) return;
+  nextPreviewEl.innerHTML=`<strong>Next draw</strong><span>${itemLabel(G.nextItem)} · ⚡${G.nextItem.cost}</span>`;
+  const pityActive=Object.values(G.foodPity).some(value=>value>0);
+  nextPreviewEl.style.borderColor=pityActive?'var(--pat)':'var(--wood)';
+}
+function refreshSharedAffordability(){
+  boardSlotsEl.querySelectorAll('.board-slot').forEach(el=>{
+    const item=G.board[+el.dataset.idx];
+    const needed= item && G.stam<item.cost;
+    el.classList.toggle('disabled',needed);
+    const pity= item && item.kind==='food' && waitingFoodIds().has(item.id) && G.foodPity[item.id]>0;
+    el.classList.toggle('pity',!!pity);
+  });
+}
+function initializeSharedBoard(){
+  G.board=[]; G.foodPity=Object.fromEntries(MENU.map(item=>[item.id,0])); G.nextItem=weightedSharedItem();
+  for(let i=0;i<6;i++) G.board.push(drawSharedItem());
+  let foodCount=G.board.filter(item=>item.kind==='food').length;
+  for(let index=0;foodCount<2&&index<G.board.length;index++){
+    if(G.board[index].kind!=='food'){G.board[index]={...MENU[foodCount%MENU.length],kind:'food'};foodCount++;}
+  }
+}
+function replaceSharedSlot(index){
+  refreshSharedPreview();
+  G.board[index]=drawSharedItem();
+  renderSharedBoard(index);
+}
+function discardSharedSlot(index){
+  const item=G.board[index];
+  if(G.stam<item.cost){toast(`Need ⚡${item.cost} stamina to discard`); return;}
+  G.stam-=item.cost;
+  replaceSharedSlot(index);
+  toast(`🗑️ Discarded ${itemLabel(item)} · next draw revealed`);
+  updateHUD();
+}
+function sharedDishServe(customer,index){
+  const item=G.board[index];
+  if(customer.offmenu || customer.order.id!==item.id){
+    G.stam-=item.cost; G.rating-=8; customer.pat-=6;
+    toast(`❌ Wrong food! ${customer.emoji} wanted ${customer.offmenu?'a special item':customer.order.emoji} · −8⭐`);
+    replaceSharedSlot(index); updateHUD(); return;
+  }
+  G.stam-=item.cost;
+  const pct=customer.pat/customer.patMax;
+  const tip=tipFor(customer,false);
+  G.served++; G.gold+=tip;
+  let message=`✅ ${customer.emoji} loved the ${item.name}! +💰${tip}`;
+  if(pct>.6){
+    G.rating=Math.min(100,G.rating+3);
+    const bonus=Math.round(customer.tipBase/2); G.gold+=bonus;
+    message+=` · Happy! +3⭐ +💰${bonus}`;
+  }
+  toast(message); removeCustomer(customer); replaceSharedSlot(index); updateHUD();
+}
+function useSharedCard(index,target){
+  const item=G.board[index];
+  if(G.stam<item.cost){toast(`Need ⚡${item.cost} stamina`); return;}
+  if(!item.aoe && !target) return;
+  G.stam-=item.cost;
+  const message=item.use(G,target);
+  if(message) toast(message);
+  replaceSharedSlot(index); updateHUD();
+}
+function sharedCustomerAt(x,y){
+  const element=document.elementFromPoint(x,y);
+  const customerElement=element&&element.closest?element.closest('.customer'):null;
+  if(!customerElement) return null;
+  return G.customers.find(c=>String(c.id)===customerElement.dataset.cid)||null;
+}
+function startSharedDrag(event,index){
+  if(!G.running || G.drag) return;
+  event.preventDefault();
+  const item=G.board[index];
+  if(!item) return;
+  if(G.stam<item.cost){toast(`Need ⚡${item.cost} stamina`); return;}
+  G.drag={index,item};
+  ghostEl.innerHTML=`${item.emoji||'🐾'} ${item.name} <span style="color:var(--stam)">⚡${item.cost}</span>`;
+  ghostEl.classList.add('show');
+  const source=boardSlotsEl.querySelector(`[data-idx="${index}"]`);
+  if(source) source.classList.add('lifted');
+  if(item.kind==='card' && item.aoe) floorEl.classList.add('aoe-ready');
+  moveGhost(event.clientX,event.clientY);
+}
+function clearSharedHover(){ G.customers.forEach(c=>c.el.classList.remove('hover-ok','hover-bad')); discardZoneEl.classList.remove('hover'); }
+function sharedDragMove(event){
+  if(!G.drag) return;
+  moveGhost(event.clientX,event.clientY); clearSharedHover();
+  const item=G.drag.item, customer=sharedCustomerAt(event.clientX,event.clientY);
+  const under=document.elementFromPoint(event.clientX,event.clientY);
+  if(under&&under.closest&&under.closest('#discardZone')) discardZoneEl.classList.add('hover');
+  if(customer){
+    const valid=item.kind==='card' || (!customer.offmenu && customer.order.id===item.id);
+    customer.el.classList.add(valid?'hover-ok':'hover-bad');
+  }
+}
+function sharedDragEnd(event){
+  if(!G.drag) return;
+  const drag=G.drag, item=drag.item;
+  const customer=sharedCustomerAt(event.clientX,event.clientY);
+  const under=document.elementFromPoint(event.clientX,event.clientY);
+  const discard=under&&under.closest&&under.closest('#discardZone');
+  clearSharedHover(); ghostEl.classList.remove('show'); floorEl.classList.remove('aoe-ready');
+  const source=boardSlotsEl.querySelector(`[data-idx="${drag.index}"]`);
+  if(source) source.classList.remove('lifted');
+  G.drag=null;
+  if(discard){discardSharedSlot(drag.index); return;}
+  if(item.kind==='food'){
+    if(customer) sharedDishServe(customer,drag.index);
+    return;
+  }
+  if(item.aoe){
+    const dock=under&&under.closest&&under.closest('#boardSlots');
+    if(!dock) useSharedCard(drag.index,null);
+  }else if(customer){
+    useSharedCard(drag.index,customer);
+  }
+}
+function sharedCancelDrag(){
+  if(!G.drag) return;
+  const source=boardSlotsEl.querySelector(`[data-idx="${G.drag.index}"]`);
+  if(source) source.classList.remove('lifted');
+  clearSharedHover(); ghostEl.classList.remove('show'); floorEl.classList.remove('aoe-ready'); G.drag=null;
+}
+
+function sharedRerollFoods(){
+  G.board.forEach((item,index)=>{
+    if(item.kind==='food') G.board[index]=drawSharedItem();
+  });
+  renderSharedBoard();
+}
+SHARED_ITEMS.find(item=>item.id==='buffet').use=(g)=>{
+  sharedRerollFoods();
+  return '🍽️ Food slots redrawn from the shared deck.';
+};
+
+function sharedTick(ts){
+  if(!G.running) return;
+  const dt=Math.min((ts-last)/1000,.1); last=ts; G.t+=dt;
+  G.stam=Math.min(STAM_MAX,G.stam+STAM_REGEN*dt);
+  const dayFrac=G.t/DAY_SECONDS;
+  const maxCrowd=Math.min(7,2+Math.floor(G.t/40))+(G.t<G.rushUntil?2:0);
+  G.spawnT-=dt;
+  if(G.spawnT<=0&&G.t<DAY_SECONDS&&G.customers.length<maxCrowd&&G.served+G.customers.length<QUOTA){
+    spawnCustomer(); G.spawnInterval=Math.max(2.2,5.5-G.t*.022); G.spawnT=G.spawnInterval;
+  }
+  RUSH_TIMES.forEach((time,index)=>{
+    if(!G.rushFired[index]&&G.t>=time){
+      G.rushFired[index]=true; G.rushUntil=G.t+20; showBanner('🔔 RUSH HOUR!');
+      [0,350,700].forEach(delay=>setTimeout(()=>{if(G.running&&!G.over)spawnCustomer();},delay));
+    }
+  });
+  const drain=1+.8*dayFrac; let drip=0;
+  for(const customer of [...G.customers]){
+    const frozen=G.t<customer.yarnUntil;
+    if(!frozen) customer.pat-=dt*drain;
+    const pct=Math.max(0,customer.pat/customer.patMax);
+    if(pct<.25) drip+=.7;
+    const fill=customer.el.querySelector('.fill'); fill.style.width=(pct*100)+'%';
+    fill.classList.toggle('low',pct<.35&&!frozen); fill.classList.toggle('yarn',frozen);
+    customer.el.classList.toggle('angry',pct<.25&&!frozen);
+    customer.el.querySelector('.badges').textContent=(customer.regal?'👑':'')+(frozen?'💤':'');
+    if(customer.pat<=0){G.rating-=15; toast(`😠 ${customer.emoji} stormed out! −15⭐`); removeCustomer(customer);}
+  }
+  G.rating-=drip*dt;
+  $('clock').textContent=clockStr(G.t);
+  if(G.rating<=0){endRun(false);return;}
+  if(G.served>=QUOTA){endRun(true);return;}
+  if(G.t>=DAY_SECONDS&&G.customers.length===0){endRun(G.served>=WIN_MIN);return;}
+  updateHUD(); refreshSharedAffordability(); requestAnimationFrame(sharedTick);
+}
+function sharedStartGame(){
+  G=sharedNewGame(); G.running=true; last=performance.now(); customersEl.innerHTML='';
+  initializeSharedBoard(); renderMenuReference(); renderSharedBoard(); updateHUD();
+  $('startOverlay').classList.add('hidden'); requestAnimationFrame(sharedTick);
+}
+
+function sharedUpdateHUD(){
+  $('staminaBar').style.width=(Math.max(0,G.stam)/STAM_MAX*100)+'%';
+  const rating=$('ratingBar'); rating.style.width=Math.max(0,G.rating)+'%';
+  rating.style.background=G.rating>60?'var(--green)':G.rating>30?'var(--pat)':'var(--red)';
+  $('gold').textContent=G.gold; $('servedStat').textContent=`🍽️ Served: ${G.served}/${QUOTA}`;
+  $('hhChip').classList.toggle('hidden',G.t>=G.hhUntil); updateNextPreview();
+}
+
+const legacySpawnCustomer=spawnCustomer;
+spawnCustomer=function(){ legacySpawnCustomer(); if(G&&G.board) refreshSharedPreview(); };
+newGame=sharedNewGame;
+renderDishes=()=>renderSharedBoard();
+renderHand=()=>renderSharedBoard();
+updateHUD=sharedUpdateHUD;
+startGame=sharedStartGame;
+tick=sharedTick;
+cancelDrag=sharedCancelDrag;
+rerollDishes=sharedRerollFoods;
+window.removeEventListener('pointermove',onDragMove);
+window.removeEventListener('pointerup',onDragEnd);
+window.removeEventListener('pointercancel',cancelDrag);
+window.addEventListener('pointermove',sharedDragMove,{passive:true});
+window.addEventListener('pointerup',sharedDragEnd);
+window.addEventListener('pointercancel',sharedCancelDrag);
+window.addEventListener('load',()=>{G=sharedNewGame();initializeSharedBoard();renderMenuReference();renderSharedBoard();});
+</script>
+</body>
+</html>
