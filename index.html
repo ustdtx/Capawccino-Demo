@@ -17,29 +17,36 @@ header{padding:10px 18px;border-bottom:3px solid var(--wood);background:var(--pa
 .bar-wrap{height:14px;width:120px;border-radius:10px;border:1px solid #120d09;background:#160f0a;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:5px}
 .bar{height:100%;transition:width .2s}
 .stamina{background:var(--blue)}
-main{display:flex;flex-direction:column;gap:0;flex:1;min-height:0;overflow-y:auto}
-section{padding:16px}
-.left{background:#281c14;border-bottom:3px solid var(--wood)}
-.right{display:flex;flex-direction:column;gap:14px}
+main{display:flex;flex-direction:column;gap:0;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+section{padding:16px;max-width:850px;margin-left:auto;margin-right:auto;width:100%}
 .section-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:900;margin:0 0 8px}
-.player{display:flex;gap:10px;align-items:center;background:var(--panel);border:2px solid var(--wood);border-radius:12px;padding:9px;margin-bottom:14px}
-.player .avatar{font-size:25px}
-.player small{opacity:.75}
-.ingredients{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-.ingredient{position:relative;text-align:left;min-height:73px;padding:8px;border:2px solid var(--wood);border-radius:10px;background:var(--panel);cursor:grab;touch-action:none;overflow:hidden}
-.ingredient:active{cursor:grabbing}
-.ingredient:hover:not(:disabled){border-color:var(--accent)}
-.ingredient.selected{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(237,206,88,.3)}
-.ingredient:disabled{opacity:.45;cursor:not-allowed}
-.ingredient.lifted{opacity:.22}
-.ingredient .emoji{font-size:24px}
-.ingredient strong,.ingredient small{display:block}
-.ingredient small{opacity:.72}
-.stock{position:absolute;right:7px;top:6px;background:#17100b;border-radius:12px;padding:1px 6px;color:var(--blue);font-weight:900}
-.regen{height:4px;background:#170f0a;border-radius:4px;overflow:hidden;margin-top:6px}
-.regen i{display:block;height:100%;background:var(--green);transition:width .2s}
-.recipe-help{margin-top:10px;min-height:40px;padding:7px;background:var(--panel2);border-radius:8px;font-size:12px}
-.customers{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start;max-height:260px;overflow:auto;padding:3px}
+.stations-hint{margin:0 0 8px;color:#bda78e;font-size:12px}
+.action-bar{display:flex;gap:8px;padding:10px 16px;background:var(--panel);border-top:2px solid var(--wood);border-bottom:2px solid var(--wood);flex-shrink:0}
+.action-btn{flex:1;padding:12px 8px;border:2px solid var(--wood);border-radius:10px;background:var(--panel2);color:var(--cream);font:inherit;font-weight:900;font-size:14px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
+.action-btn:hover{border-color:var(--accent);background:var(--wood)}
+.stations{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.station{position:relative;min-height:160px;border:3px solid var(--wood);border-radius:16px;background:var(--panel);padding:14px;cursor:pointer;text-align:center;overflow:hidden}
+.station:hover{border-color:var(--accent)}
+.station.empty{display:flex;align-items:center;justify-content:center;flex-direction:column;color:#bda78e;min-height:120px}
+.station.hover-ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(138,199,106,.55)}
+.station .ring{width:100px;height:100px;margin:0 auto 8px;border-radius:50%;padding:8px;background:conic-gradient(var(--accent) var(--progress),#21160f 0)}
+.station .ring-inner{background:var(--panel2);width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.station .dish{font-size:39px}
+.station .time{font-size:18px;font-weight:900}
+.station .status{font-size:12px;color:var(--accent);font-weight:800}
+.station.ready{border-color:var(--green);animation:pulse 1s infinite}
+.station.early{border-color:var(--red)}
+@keyframes pulse{50%{box-shadow:0 0 14px rgba(138,199,106,.5)}}
+.holding-list{display:flex;gap:8px;flex-wrap:wrap;min-height:36px;align-items:flex-start}
+.food{position:relative;width:140px;text-align:left;padding:7px;border:2px solid var(--wood);background:var(--panel2);border-radius:8px;cursor:grab;touch-action:none;display:flex;justify-content:space-between;align-items:center}
+.food:active{cursor:grabbing}
+.food.stale{border-color:var(--red)}
+.food.lifted{opacity:.22}
+.food .freshness{font-size:11px;font-weight:800;white-space:nowrap}
+.food .freshness.fresh{color:var(--green)}
+.food .freshness.ok{color:var(--yellow)}
+.food .freshness.stale{color:var(--red)}
+.customers{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start}
 .customer{position:relative;text-align:left;background:var(--panel);border:2px solid var(--wood);border-radius:10px;padding:7px;min-height:101px}
 .customer.hover-ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(138,199,106,.55)}
 .customer.hover-bad{border-color:var(--red);box-shadow:0 0 0 3px rgba(221,105,87,.55)}
@@ -49,103 +56,90 @@ section{padding:16px}
 .patience i{display:block;height:100%;background:var(--yellow);transition:width .15s}
 .patience i.low{background:var(--red)}
 .behaviour{font-size:10px;opacity:.7;margin-top:3px}
-.stations{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
-.station{position:relative;min-height:230px;border:3px solid var(--wood);border-radius:16px;background:var(--panel);padding:14px;cursor:pointer;text-align:center;overflow:hidden}
-.station:hover{border-color:var(--accent)}
-.station.empty{display:flex;align-items:center;justify-content:center;flex-direction:column;color:#bda78e}
-.station.hover-ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(138,199,106,.55)}
-.station .ring{width:142px;height:142px;margin:0 auto 10px;border-radius:50%;padding:10px;background:conic-gradient(var(--accent) var(--progress),#21160f 0)}
-.station .ring-inner{background:var(--panel2);width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column}
-.station .dish{font-size:39px}
-.station .time{font-size:18px;font-weight:900}
-.station .status{font-size:12px;color:var(--accent);font-weight:800}
-.station.ready{border-color:var(--green);animation:pulse 1s infinite}
-.station.early{border-color:var(--red)}
-@keyframes pulse{50%{box-shadow:0 0 14px rgba(138,199,106,.5)}}
-.holding{background:var(--panel);border:2px solid var(--wood);border-radius:12px;padding:10px}
-.holding-list{display:flex;gap:8px;flex-wrap:wrap}
-.food{position:relative;width:140px;text-align:left;padding:7px;border:2px solid var(--wood);background:var(--panel2);border-radius:8px;cursor:grab;touch-action:none}
-.food:active{cursor:grabbing}
-.food.stale{border-color:var(--red)}
-.food.lifted{opacity:.22}
-.food .quality{font-size:10px;opacity:.75}
-.deck{background:var(--panel);border:2px solid var(--wood);border-radius:12px;padding:10px}
-.deck-top{display:flex;flex-direction:column;gap:8px}
-.deck-stamina{font-size:12px;font-weight:900}
-.card-slot{background:linear-gradient(140deg,#84542e,#5c381f);border:2px solid var(--accent);border-radius:10px;padding:9px;cursor:grab;touch-action:none;position:relative}
-.card-slot:active{cursor:grabbing}
-.card-slot.lifted{opacity:.22}
-.card-slot strong,.card-slot span{display:block}
-.card-slot span{font-size:11px;opacity:.85;margin-top:2px}
-.card-slot .card-cost{position:absolute;right:8px;top:8px;color:var(--blue);font-weight:800;font-size:12px}
-.next{font-size:11px}
-.next b{color:var(--accent)}
-.deck-button{width:100%;margin:0;padding:8px 12px;border:0;border-radius:9px;background:var(--accent);color:#25180e;font-weight:900;cursor:pointer;font:inherit}
-.cat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.cat{border:2px solid var(--wood);background:var(--panel);border-radius:9px;padding:7px;text-align:left}
-.cat button{border:0;background:none;padding:0;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit}
-.cat strong,.cat small{display:block}
-.cat small{opacity:.7;font-size:10px}
-.cat.ready{border-color:var(--green)}
-.cat .cooldown{color:var(--yellow);font-size:11px;font-weight:800}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:4}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:4}
+.modal-content{max-width:540px;width:calc(100% - 32px);max-height:calc(100vh - 48px);overflow-y:auto;margin:16px;padding:20px;background:var(--panel);border:3px solid var(--accent);border-radius:16px;text-align:center}
+.modal-content h2{color:var(--accent);margin-top:0;font-size:16px}
+.modal-close{margin-top:12px;padding:10px 24px;border:0;border-radius:9px;background:var(--accent);color:#25180e;font-weight:900;cursor:pointer;font:inherit}
+.pantry-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.pantry-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:12px;border:2px solid transparent;transition:border-color .15s,background .15s}
+.pantry-item:hover{border-color:var(--accent)}
+.pantry-item.selected{border-color:var(--yellow);background:rgba(237,206,88,.12)}
+.pantry-item:disabled,.pantry-item.disabled{opacity:.35;cursor:not-allowed}
+.pantry-item.disabled:hover{border-color:transparent}
+.pantry-circle{width:76px;height:76px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
+.pantry-circle::before{content:'';position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(var(--green) var(--regen),transparent var(--regen));z-index:0;opacity:.7}
+.pantry-circle::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--panel2);z-index:1}
+.pantry-circle .emoji{font-size:26px;z-index:2;position:relative}
+.pantry-name{font-size:10px;font-weight:800;text-align:center;line-height:1.2}
+.pantry-stock{font-size:9px;color:var(--blue);font-weight:900}
+.pantry-result{min-height:38px;padding:8px 10px;background:var(--panel2);border-radius:8px;font-size:13px;font-weight:800;margin-top:4px}
+.deck-stamina{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:900;font-size:13px}
+.deck-stamina-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.deck-stamina-row .deck-stamina{margin-bottom:0}
+.stamina-actions{display:flex;gap:8px;align-items:center}
+.next-card-preview{font-size:11px;color:var(--cream);opacity:.7;white-space:nowrap}
+.deck-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.deck-card{background:linear-gradient(140deg,#84542e,#5c381f);border:2px solid var(--accent);border-radius:10px;padding:10px;cursor:grab;touch-action:none;position:relative;text-align:left;min-height:70px}
+.deck-card:active{cursor:grabbing}
+.deck-card.lifted{opacity:.22}
+.deck-card:first-child{border-color:var(--yellow);box-shadow:0 0 8px rgba(237,206,88,.3)}
+.deck-card strong,.deck-card span{display:block}
+.deck-card strong{font-size:12px}
+.deck-card span{font-size:10px;opacity:.85;margin-top:3px}
+.deck-card .card-cost{position:absolute;right:6px;top:6px;color:var(--blue);font-weight:800;font-size:11px}
+.next-card-preview{font-size:11px;margin:8px 0;color:var(--cream);opacity:.7}
+.refresh-btn{width:auto;margin:8px auto 0;padding:8px 20px;border:0;border-radius:9px;background:var(--accent);color:#25180e;font-weight:900;cursor:pointer;font:inherit;display:block}
+.refresh-btn:disabled{opacity:.4;cursor:not-allowed}
+.buff-grid{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.buff-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--panel2);border:2px solid var(--wood);border-radius:10px;text-align:left}
+.buff-item.ready{border-color:var(--green)}
+.buff-item .buff-emoji{font-size:28px}
+.buff-item .buff-info{flex:1}
+.buff-item .buff-info strong{display:block;font-size:13px}
+.buff-item .buff-info small{opacity:.7;font-size:11px}
+.buff-item .buff-cooldown{color:var(--yellow);font-weight:900;font-size:13px;white-space:nowrap}
+.buff-item .buff-use{padding:8px 14px;border:0;border-radius:8px;background:var(--green);color:#25180e;font-weight:900;cursor:pointer;font:inherit;font-size:12px}
+.buff-item .buff-use:disabled{background:#555;cursor:not-allowed}
+#ghost{position:fixed;z-index:100;pointer-events:none;transform:translate(-50%,-120%) rotate(-4deg);background:var(--panel2);border:2px solid var(--accent);border-radius:12px;padding:8px 16px;font-weight:800;font-size:16px;white-space:nowrap;box-shadow:0 10px 26px rgba(0,0,0,.55);display:none}
+#ghost.show{display:block}
+.toast{position:fixed;z-index:6;left:50%;top:75px;transform:translateX(-50%);background:var(--panel2);border:2px solid var(--accent);padding:7px 14px;border-radius:8px;font-weight:800;animation:toast 2s forwards;max-width:90vw;text-align:center;pointer-events:none}
+@keyframes toast{0%,100%{opacity:0}12%,80%{opacity:1}}
 .dialog{max-width:540px;margin:16px;padding:28px;background:var(--panel);border:3px solid var(--accent);border-radius:16px;text-align:center}
 .dialog h1{color:var(--accent);margin-top:0}
 .dialog ul{text-align:left}
 .dialog button{padding:10px 24px;border:0;border-radius:9px;background:var(--accent);color:#25180e;font-weight:900;cursor:pointer;font:inherit}
-.toast{position:fixed;z-index:6;left:50%;top:75px;transform:translateX(-50%);background:var(--panel2);border:2px solid var(--accent);padding:7px 14px;border-radius:8px;font-weight:800;animation:toast 2s forwards;max-width:90vw;text-align:center;pointer-events:none}
-@keyframes toast{0%,100%{opacity:0}12%,80%{opacity:1}}
-#ghost{position:fixed;z-index:100;pointer-events:none;transform:translate(-50%,-120%) rotate(-4deg);background:var(--panel2);border:2px solid var(--accent);border-radius:12px;padding:8px 16px;font-weight:800;font-size:16px;white-space:nowrap;box-shadow:0 10px 26px rgba(0,0,0,.55);display:none}
-#ghost.show{display:block}
-@media(min-width:900px){
-  main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
-  .left{grid-column:1;grid-row:1/3;border-right:3px solid var(--wood);border-bottom:0;overflow:auto}
-  .right{grid-column:2;grid-row:1/3;padding:16px}
-  .customers{max-height:calc(100vh - 430px)}
+.section-deck-inline{display:none}
+@media(min-width:1024px){
+  .section-deck-inline{display:block;padding:16px}
+  #deckBtn{display:none}
+  #buffBtnMobile{display:none}
+  .customers{grid-template-columns:repeat(6,1fr)}
 }
-@media(max-width:600px){
-  body{font-size:16px}
-  header{padding:8px 12px;gap:10px}
-  .brand{font-size:17px}
+@media(max-width:599px){
+  body{font-size:14px}
+  header{padding:8px 12px;gap:8px}
+  .brand{font-size:15px}
   .hud{gap:8px;font-size:12px}
-  .bar-wrap{width:80px;height:12px}
-  section{padding:10px}
-  .player{padding:8px;gap:8px}
-  .player .avatar{font-size:22px}
-  .player b{font-size:14px}
-  .ingredients{grid-template-columns:1fr 1fr;gap:6px}
-  .ingredient{min-height:80px;padding:10px;font-size:15px}
-  .ingredient .emoji{font-size:28px}
-  .ingredient strong{font-size:14px}
-  .ingredient small{font-size:12px}
-  .recipe-help{font-size:13px;padding:8px}
-  .customers{grid-template-columns:1fr 1fr;gap:6px;max-height:none}
-  .customer{min-height:110px;padding:8px}
-  .customer .face{font-size:32px}
-  .customer .order{font-size:14px}
-  .behaviour{font-size:11px}
-  .stations{grid-template-columns:1fr;gap:10px}
-  .station{min-height:200px;padding:12px}
-  .station .ring{width:120px;height:120px}
-  .station .dish{font-size:34px}
-  .station .time{font-size:16px}
-  .station .status{font-size:13px}
-  .holding-list{gap:6px}
-  .food{width:100%;padding:10px}
-  .food b{font-size:15px}
-  .deck{padding:12px}
-  .card-slot{padding:12px}
-  .card-slot strong{font-size:16px}
-  .card-slot span{font-size:13px}
-  .deck-stamina{font-size:14px}
-  .bar-wrap{width:100px}
-  .cat-row{grid-template-columns:1fr 1fr 1fr;gap:6px}
-  .cat{padding:6px}
-  .cat strong{font-size:12px}
-  .cat small{font-size:10px}
-  .dialog{padding:20px;margin:10px}
-  .dialog h1{font-size:22px}
-  .dialog button{padding:12px 28px;font-size:16px}
+  .bar-wrap{width:60px;height:10px}
+  section{padding:12px}
+  .station{min-height:120px;padding:8px}
+  .station .ring{width:80px;height:80px;padding:6px}
+  .station .ring-inner{padding:4px}
+  .station .dish{font-size:24px}
+  .station .time{font-size:14px}
+  .station .status{font-size:10px}
+  .customers{grid-template-columns:repeat(2,1fr);gap:8px}
+  .customer{min-height:80px;padding:6px}
+  .pantry-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .pantry-circle{width:64px;height:64px}
+  .pantry-circle .emoji{font-size:22px}
+  .deck-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .action-btn{font-size:12px;padding:10px 6px}
+}
+@media(max-width:359px){
+  .pantry-grid{grid-template-columns:repeat(2,1fr)}
+  .deck-grid{grid-template-columns:1fr}
+  .customers{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -155,58 +149,146 @@ section{padding:16px}
   <div class="hud"><div class="stat">🕒 <span id="clock">5:00</span></div><div class="stat">💰 Revenue: <span id="revenue">0</span></div><div class="stat">Net: <span id="net">-500</span></div><div class="stat">🍽️ Served: <span id="served">0</span></div></div>
 </header>
 <main>
-  <section class="left">
-    <div class="player"><div class="avatar">🧑‍🍳</div><div><b>Your kitchen</b><br><small>Drag two ingredients onto a station to cook.</small></div></div>
-    <h2 class="section-title">Pantry</h2><div id="ingredients" class="ingredients"></div><div id="recipeHelp" class="recipe-help">Drag ingredients to a free cooking station.</div>
-    <h2 class="section-title" style="margin-top:16px">Customers</h2><div id="customers" class="customers"></div>
+  <div class="action-bar">
+    <button id="deckBtn" class="action-btn">🃏 Deck</button>
+    <button id="buffBtnMobile" class="action-btn">🐱 Buffs</button>
+  </div>
+  <section class="section-customers">
+    <h2 class="section-title">Customers</h2>
+    <div id="customers" class="customers"></div>
   </section>
-  <section class="right">
-    <h2 class="section-title">Cooking stations</h2><p style="margin:0 0 8px;color:#d2bda5;font-size:12px">Drop ingredients here. Tap a ready station to plate.</p>
+  <section class="section-holding">
+    <h2 class="section-title">Prepared Food</h2>
+    <div id="holding" class="holding-list"></div>
+  </section>
+  <section class="section-stations">
+    <h2 class="section-title">Cooking Stations</h2>
+    <p class="stations-hint">Tap an empty station to pick ingredients.</p>
     <div id="stations" class="stations"></div>
-    <div class="holding"><h2 class="section-title">Prepared food</h2><div id="holding" class="holding-list"><small>No dishes prepared.</small></div></div>
-    <div class="deck"><div class="deck-top"><div class="deck-stamina">⚡ Stamina <div class="bar-wrap"><div id="staminaBar" class="bar stamina"></div></div> <span id="staminaText"></span></div><div id="activeCard" class="card-slot"></div><div id="nextCard" class="next"></div><button id="rerollButton" class="deck-button">Reroll deck - ⚡3</button></div></div>
-    <div id="cats" class="cat-row"></div>
+  </section>
+  <section class="section-deck-inline">
+    <h2 class="section-title">Blessings</h2>
+    <div class="deck-stamina-row">
+      <div class="deck-stamina">⚡ Stamina <div class="bar-wrap"><div id="staminaBarInline" class="bar stamina"></div></div> <span id="staminaTextInline"></span></div>
+      <div class="stamina-actions">
+        <span id="nextCardPreviewInline" class="next-card-preview"></span>
+        <button id="refreshDeckInline" class="refresh-btn">Refresh - ⚡4</button>
+        <button id="buffBtn" class="refresh-btn">🐱 Buffs</button>
+      </div>
+    </div>
+    <div id="deckGridInline" class="deck-grid"></div>
   </section>
 </main>
-<div id="startOverlay" class="overlay"><div class="dialog"><h1>Morning Prep</h1><p>You paid <b>💰500</b> to open the cafe. Keep more than you spent over a five-minute shift.</p><ul><li>Drag <b>two ingredients</b> onto a free station to start cooking.</li><li>Ingredients slowly restock to three portions.</li><li>Tap a station to plate food when ready.</li><li>Drag prepared food onto matching customers to serve.</li><li>Drag the active card to play it.</li></ul><button id="startButton">Open the Cafe</button></div></div>
-<div id="endOverlay" class="overlay hidden"><div class="dialog"><h1 id="endTitle"></h1><p id="endText"></p><button onclick="location.reload()">New Shift</button></div></div>
+<div id="pantryModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>Select two items to start cooking</h2>
+    <div id="pantryGrid" class="pantry-grid"></div>
+    <div id="pantryResult" class="pantry-result">Select two ingredients above.</div>
+    <button class="modal-close" id="pantryCloseBtn">Close</button>
+  </div>
+</div>
+<div id="deckModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>Blessings</h2>
+    <div class="deck-stamina">⚡ Stamina <div class="bar-wrap"><div id="staminaBar" class="bar stamina"></div></div> <span id="staminaText"></span></div>
+    <div id="deckGrid" class="deck-grid"></div>
+    <div id="nextCardPreview" class="next-card-preview"></div>
+    <button id="refreshDeck" class="refresh-btn">Refresh - ⚡4</button>
+    <button class="modal-close" id="deckCloseBtn">Close</button>
+  </div>
+</div>
+<div id="buffModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>Cat Buffs</h2>
+    <div id="buffGrid" class="buff-grid"></div>
+    <button class="modal-close" id="buffCloseBtn">Close</button>
+  </div>
+</div>
+<div id="startOverlay" class="modal-overlay"><div class="dialog"><h1>Morning Prep</h1><p>You paid <b>💰500</b> to open the cafe. Keep more than you spent over a five-minute shift.</p><ul><li>Open the <b>Pantry</b> to select ingredients, then cook at a station.</li><li>Ingredients slowly restock to three portions.</li><li>Tap a station to plate food when ready.</li><li>Drag prepared food onto matching customers to serve.</li><li>Open <b>Deck</b> to drag out and play blessing cards.</li></ul><button id="startButton">Open the Cafe</button></div></div>
+<div id="endOverlay" class="modal-overlay hidden"><div class="dialog"><h1 id="endTitle"></h1><p id="endText"></p><button onclick="location.reload()">New Shift</button></div></div>
 <div id="ghost"></div>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
 const SFX=(()=>{const bank={};let muted=false,unlocked=false;const files=['pickup','drop','serve','wrong','card','spawn','walkout','discard','rush','win','lose','button'];function unlock(){if(unlocked)return;files.forEach(n=>{try{bank[n]=new Audio(`sfx/${n}.wav`);bank[n].preload='auto'}catch(e){}});unlocked=true}function play(name,vol=1){if(muted||!unlocked)return;const s=bank[name];if(!s)return;const i=s.cloneNode();i.volume=Math.min(1,Math.max(0,vol));i.play().catch(()=>{})}return{unlock,play,toggleMute(){muted=!muted;return muted},get muted(){return muted}}})();
-const RUN_SECONDS=300,START_COST=500,STAM_MAX=12,STAM_REGEN=.34,HOLD_FRESH=34;
+const RUN_SECONDS=300,START_COST=500,STAM_MAX=12,STAM_REGEN=.085,HOLD_FRESH=34;
 const INGREDIENTS=[{id:'beans',emoji:'🫘',name:'Coffee Beans',regen:24},{id:'milk',emoji:'🥛',name:'Milk',regen:20},{id:'flour',emoji:'🌾',name:'Flour',regen:27},{id:'fish',emoji:'🐟',name:'Fish',regen:30},{id:'berry',emoji:'🫐',name:'Berries',regen:25},{id:'sugar',emoji:'🍬',name:'Sugar',regen:22}];
-const RECIPES=[{id:'pawccino',name:'Pawccino',emoji:'☕',needs:['beans','milk'],time:34,value:78,coffee:true},{id:'mocha',name:'Sweet Mocha',emoji:'🍫',needs:['beans','sugar'],time:38,value:92,coffee:true},{id:'warmmilk',name:'Berry Milk',emoji:'🥤',needs:['milk','berry'],time:30,value:66},{id:'cake',name:'Berry Cake',emoji:'🍰',needs:['flour','berry'],time:42,value:108},{id:'fishpie',name:'Fish Pie',emoji:'🥧',needs:['fish','flour'],time:45,value:122},{id:'treats',name:'Sweet Treats',emoji:'🍪',needs:['flour','sugar'],time:35,value:82},{id:'fishcream',name:'Creamy Fish',emoji:'🍲',needs:['fish','milk'],time:39,value:100}];
-const CARDS=[{id:'turbo',name:'Turbo Whisk',desc:'Cut remaining cook time by 40%.',use:g=>g.stations.forEach(s=>{if(s.recipe&&s.remaining>0)s.remaining*=.6})},{id:'bloom',name:'Pantry Bloom',desc:'Advance every ingredient restock by 12s.',use:g=>g.ingredients.forEach(i=>{if(i.stock<3)i.regenLeft=Math.max(0,i.regenLeft-12)})},{id:'warm',name:'Keep Warm',desc:'Pause freshness decay for 18s.',use:g=>g.warmUntil=g.t+18},{id:'wish',name:'Requested Special',desc:'Pick an ingredient to start a requested recipe.',target:'ingredient'},{id:'focus',name:'Barista Focus',desc:'Restore 4 stamina, next dish cooks 25% faster.',use:g=>{g.stam=Math.min(STAM_MAX,g.stam+4);g.focus=true}}];
+const RECIPES=[{id:'pawccino',name:'Pawccino',emoji:'☕',needs:['beans','milk'],time:34,value:50,coffee:true},{id:'mocha',name:'Sweet Mocha',emoji:'🍫',needs:['beans','sugar'],time:38,value:60,coffee:true},{id:'warmmilk',name:'Berry Milk',emoji:'🥤',needs:['milk','berry'],time:30,value:42},{id:'cake',name:'Berry Cake',emoji:'🍰',needs:['flour','berry'],time:42,value:72},{id:'fishpie',name:'Fish Pie',emoji:'🥧',needs:['fish','flour'],time:45,value:88},{id:'treats',name:'Sweet Treats',emoji:'🍪',needs:['flour','sugar'],time:35,value:52},{id:'fishcream',name:'Creamy Fish',emoji:'🍲',needs:['fish','milk'],time:39,value:68}];
+const CARDS=[{id:'turbo',name:'Turbo Whisk',desc:'Cut remaining cook time by 40%.',use:g=>g.stations.forEach(s=>{if(s.recipe&&s.remaining>0)s.remaining*=.6})},{id:'bloom',name:'Pantry Bloom',desc:'Advance every ingredient restock by 12s.',use:g=>g.ingredients.forEach(i=>{if(i.stock<3)i.regenLeft=Math.max(0,i.regenLeft-12)})},{id:'warm',name:'Keep Warm',desc:'Pause freshness decay for 18s.',use:g=>g.warmUntil=g.t+18},{id:'refund',name:'Ingredient Refund',desc:'Refund one ingredient on your next cook.',use:g=>g.refundNext=true},{id:'focus',name:'Barista Focus',desc:'Restore 4 stamina, next dish cooks 25% faster.',use:g=>{g.stam=Math.min(STAM_MAX,g.stam+4);g.focus=true}},{id:'lucky',name:'Lucky Clover',desc:'Next dish served earns double revenue.',use:g=>g.luckyClover=true},{id:'nap',name:'Cat Nap',desc:'Pause all customer timers for 8 seconds.',use:g=>{g.napUntil=g.t+8;toast('😴 Cat Nap: Customers paused!')}},{id:'double',name:'Double Order',desc:'Next customer arrives with doubled patience.',use:g=>g.doubleOrder=true},{id:'golden',name:'Golden Whisk',desc:'Restore your held food to perfect quality.',use:g=>{if(!g.holding.length){toast('No food to restore');return}const f=g.holding[g.holding.length-1];f.quality=1;toast(`✨ Golden Whisk: ${f.recipe.name} restored!`)}}];
 const BEHAVIOURS=[{name:'impatient',pat:43},{name:'regular',pat:62},{name:'patient',pat:82},{name:'critic',pat:52},{name:'group order',pat:68}];
 const FACES=['🧑','👩','👨','🧓','👵','🧑‍🎤','👩‍💼','👨‍🎨','🧑‍🍳','👩‍🚀','🧑‍🏫','👨‍💻'];
 let G,last=0;
 function shuffle(items){return[...items].sort(()=>Math.random()-.5)}
-function newGame(){return{running:false,over:false,t:0,stam:STAM_MAX,revenue:0,served:0,nextId:1,spawnIn:1.5,customers:[],holding:[],selectedIngredients:[],ingredients:INGREDIENTS.map(x=>({...x,stock:3,regenLeft:0})),stations:[{},{}],deck:shuffle(CARDS),cardIndex:0,pendingCard:null,warmUntil:-1,focus:false,cats:{milo:0,ziggy:0,cleo:0},drag:null}}
+function newGame(){return{running:false,over:false,t:0,stam:STAM_MAX,revenue:0,served:0,nextId:1,spawnIn:1.5,customers:[],holding:[],selectedIngredients:[],selectedStation:null,ingredients:INGREDIENTS.map(x=>({...x,stock:3,regenLeft:0})),stations:[{},{}],deck:shuffle(CARDS),cardIndex:0,pendingCard:null,warmUntil:-1,focus:false,luckyClover:false,doubleOrder:false,refundNext:false,napUntil:0,cats:{milo:0,ziggy:0,cleo:0},drag:null}}
 function recipeFor(needs){return RECIPES.find(r=>r.needs.every(id=>needs.includes(id))&&needs.every(id=>r.needs.includes(id)))}
 function currentCard(){return G.deck[G.cardIndex]}
 function nextCard(){return G.deck[(G.cardIndex+1)%G.deck.length]}
 function toast(text){const el=document.createElement('div');el.className='toast';el.textContent=text;document.body.append(el);setTimeout(()=>el.remove(),2000)}
 function clock(){const remain=Math.max(0,RUN_SECONDS-G.t);return`${Math.floor(remain/60)}:${String(Math.floor(remain%60)).padStart(2,'0')}`}
 function ingredient(id){return G.ingredients.find(i=>i.id===id)}
+function isModalOpen(){return !$('pantryModal').classList.contains('hidden')||!$('deckModal').classList.contains('hidden')||!$('buffModal').classList.contains('hidden')}
 
-function renderIngredients(){
-  const active=G.pendingCard&&currentCard().id==='wish';
-  $('ingredients').innerHTML=G.ingredients.map(i=>{
+function openPantry(stationIdx){if(!G.running)return;if(stationIdx!==undefined)G.selectedStation=stationIdx;$('pantryModal').classList.remove('hidden');renderPantryModal()}
+function closePantry(){$('pantryModal').classList.add('hidden');G.pendingCard=null;G.selectedStation=null}
+function renderPantryModal(){
+  $('pantryGrid').innerHTML=G.ingredients.map(i=>{
     const chosen=G.selectedIngredients.includes(i.id);
-    const progress=i.stock>=3?100:Math.max(0,100*(1-i.regenLeft/i.regen));
-    return`<button class="ingredient ${chosen?'selected':''}" data-ingredient="${i.id}" ${i.stock===0&&!active?'disabled':''}><span class="stock">${i.stock}/3</span><span class="emoji">${i.emoji}</span><strong>${i.name}</strong><small>${i.stock<3?`Restocks in ${Math.ceil(i.regenLeft)}s`:'Fully stocked'}</small><span class="regen"><i style="width:${progress}%"></i></span></button>`
+    const progress=i.stock>=3?1:Math.max(0,1-i.regenLeft/i.regen);
+    const regenDeg=progress*360;
+    const s1=i.stock>=1?'var(--accent)':'#21160f';
+    const s2=i.stock>=2?'var(--accent)':'#21160f';
+    const s3=i.stock>=3?'var(--accent)':'#21160f';
+    return`<div class="pantry-item ${chosen?'selected':''} ${i.stock===0?'disabled':''}" data-ingredient="${i.id}"><div class="pantry-circle" style="background:conic-gradient(from -90deg,${s1} 0deg 119deg,#1a110a 119deg 121deg,${s2} 121deg 239deg,#1a110a 239deg 241deg,${s3} 241deg 360deg);--regen:${regenDeg}deg"><span class="emoji">${i.emoji}</span></div><div class="pantry-name">${i.name}</div><div class="pantry-stock">${i.stock}/3</div></div>`
   }).join('');
-  document.querySelectorAll('[data-ingredient]').forEach(el=>{
-    el.addEventListener('pointerdown',e=>startDrag(e,'ingredient',el.dataset.ingredient));
+  const recipe=G.selectedIngredients.length===2&&recipeFor(G.selectedIngredients);
+  $('pantryResult').innerHTML=recipe?`${recipe.emoji} ${recipe.name} — ${recipe.time}s cook time`:G.selectedIngredients.length===2?'Those ingredients do not make a recipe.':'Select two ingredients above.';
+}
+function handlePantryClick(id){
+  const item=ingredient(id);
+  if(item.stock<1)return;
+  const idx=G.selectedIngredients.indexOf(id);
+  if(idx>=0)G.selectedIngredients.splice(idx,1);
+  else if(G.selectedIngredients.length<2)G.selectedIngredients.push(id);
+  else G.selectedIngredients=[G.selectedIngredients[1],id];
+  renderPantryModal();
+  if(G.selectedIngredients.length===2){
+    const recipe=recipeFor(G.selectedIngredients);
+    if(recipe){
+      const idx=G.selectedStation;
+      if(idx!==null&&idx!==undefined&&!G.stations[idx].recipe){startRecipe(recipe,G.selectedIngredients);closePantry()}
+      else{const slot=G.stations.find(s=>!s.recipe);if(slot){startRecipe(recipe,G.selectedIngredients);closePantry()}
+      else toast('Both cooking stations are busy')}
+    }
+  }
+}
+
+function openDeck(){if(!G.running)return;$('deckModal').classList.remove('hidden');renderDeckModal()}
+function closeDeck(){$('deckModal').classList.add('hidden')}
+function renderDeckModal(){
+  const cards=[];
+  for(let i=0;i<6;i++){const idx=(G.cardIndex+i)%G.deck.length;cards.push({card:G.deck[idx],idx})}
+  $('deckGrid').innerHTML=cards.map((c,i)=>{
+    return`<div class="deck-card" data-card-idx="${c.idx}" data-position="${i}"><strong>✨ ${c.card.name}</strong><span>${c.card.desc}</span><span class="card-cost" style="color:var(--blue)">⚡2</span></div>`
+  }).join('');
+  $('staminaBar').style.width=`${G.stam/STAM_MAX*100}%`;
+  $('staminaText').textContent=`${G.stam.toFixed(1)}/${STAM_MAX}`;
+  const nc=nextCard();
+  $('nextCardPreview').innerHTML=`<b>Next:</b> ${nc.name}`;
+  const rf=$('refreshDeck');
+  rf.disabled=G.stam<4;
+  document.querySelectorAll('[data-card-idx]').forEach(el=>{
+    el.addEventListener('pointerdown',e=>startCardDragFromModal(e,+el.dataset.cardIdx));
   });
 }
 
-function renderCookAction(){
-  const recipe=G.selectedIngredients.length===2&&recipeFor(G.selectedIngredients);
-  const stationFree=G.stations.some(s=>!s.recipe);
-  $('recipeHelp').textContent=recipe?`${recipe.emoji} ${recipe.name}: ${recipe.time}s. Plate during the green window.`:G.selectedIngredients.length===2?'Those ingredients do not make a recipe.':'Drag ingredients to a free station.';
+function openBuffs(){if(!G.running)return;$('buffModal').classList.remove('hidden');renderBuffModal()}
+function closeBuffs(){$('buffModal').classList.add('hidden')}
+function renderBuffModal(){
+  const cats=[{id:'milo',emoji:'🐱',name:'Milo',desc:'Coffee cooks 50% faster'},{id:'ziggy',emoji:'⚡',name:'Ziggy',desc:'Restores 5 stamina at ≤2'},{id:'cleo',emoji:'📋',name:'Cleo',desc:'Auto-serves least-patient every 45s'}];
+  $('buffGrid').innerHTML=cats.map(cat=>{
+    const cd=G.cats[cat.id],ready=cd<=0;
+    return`<div class="buff-item ${ready?'ready':''}"><span class="buff-emoji">${cat.emoji}</span><div class="buff-info"><strong>${cat.name}</strong><small>${cat.desc}</small></div><span class="buff-cooldown">${ready?'READY':`${Math.ceil(cd)}s`}</span></div>`
+  }).join('');
 }
 
 function startRecipe(recipe,ingredientIds,fromCard=false){
@@ -214,6 +296,7 @@ function startRecipe(recipe,ingredientIds,fromCard=false){
   if(!slot){toast('Both cooking stations are busy');return false}
   if(!fromCard){for(const id of ingredientIds){const i=ingredient(id);if(i.stock<1)return false;i.stock--;if(i.stock<3)i.regenLeft=i.regen}}
   else{const i=ingredient(ingredientIds[0]);if(i.stock<1){toast('Ingredient unavailable');return false}i.stock--;if(i.stock<3)i.regenLeft=i.regen}
+  if(G.refundNext){const rid=ingredientIds[0];const ri=ingredient(rid);if(ri.stock<3){ri.stock++;toast(`♻️ Ingredient Refund: ${ri.name} refunded`)}G.refundNext=false}
   let time=recipe.time;if(recipe.coffee)time*=.5;if(G.focus){time*=.75;G.focus=false}
   Object.assign(slot,{recipe,total:time,remaining:time,readyAge:0});
   G.selectedIngredients=[];
@@ -223,26 +306,31 @@ function startRecipe(recipe,ingredientIds,fromCard=false){
 
 function renderStations(){
   $('stations').innerHTML=G.stations.map((s,index)=>{
-    if(!s.recipe)return`<div class="station empty" data-station="${index}"><b>+ Free station</b><small>Drop ingredients here</small></div>`;
+    if(!s.recipe)return`<div class="station empty" data-station="${index}"><b>+ Free station</b><small>Tap to pick ingredients</small></div>`;
     const progress=Math.min(1,(s.total-s.remaining)/s.total),ready=s.remaining<=0,early=progress<.82;
     const label=ready?(s.readyAge<=7?'Perfect window: plate now':'Overcooking - plate now'):(early?'Still cooking':'Almost ready');
     const time=ready?`${Math.ceil(s.readyAge)}s held`:`${Math.ceil(s.remaining)}s`;
-    return`<div class="station ${ready?'ready':''} ${early?'early':''}" data-station="${index}" style="--progress:${progress*100}%"><div class="ring"><div class="ring-inner"><div class="dish">${s.recipe.emoji}</div><div class="time">${time}</div></div></div><b>${s.recipe.name}</b><div class="status">${label}</div><small>Tap to plate</small></div>`
+    const dragAttr=ready?`data-station-food="${index}"`:``;
+    return`<div class="station ${ready?'ready':''} ${early?'early':''}" data-station="${index}" ${dragAttr} style="--progress:${progress*100}%"><div class="ring"><div class="ring-inner"><div class="dish">${s.recipe.emoji}</div><div class="time">${time}</div></div></div><b>${s.recipe.name}</b><div class="status">${label}</div><small>${ready?'Drag to serve':'Cooking...'}</small></div>`
   }).join('');
-  document.querySelectorAll('[data-station]').forEach(el=>{
-    el.addEventListener('click',()=>plateStation(+el.dataset.station));
+  document.querySelectorAll('[data-station-food]').forEach(el=>{
+    el.addEventListener('pointerdown',e=>startDrag(e,'stationFood',+el.dataset.stationFood));
   });
 }
 
 function plateStation(index){
   const s=G.stations[index];
-  if(!s.recipe)return;
+  if(!s.recipe){
+    if(G.selectedIngredients.length===2){const recipe=recipeFor(G.selectedIngredients);if(recipe)startRecipe(recipe,G.selectedIngredients)}
+    return;
+  }
   SFX.play('serve',.7);
   const progress=Math.min(1,(s.total-s.remaining)/s.total);
   let quality;
   if(progress<.82)quality=Math.max(.25,progress/.82*.72);
   else if(s.remaining>0)quality=.8;
   else quality=Math.max(.35,1-s.readyAge*.035);
+  if(G.goldenWhisk){quality=1;G.goldenWhisk=false;toast('✨ Golden Whisk: Perfect quality!')}
   G.holding.push({id:crypto.randomUUID(),recipe:s.recipe,quality,heldAt:G.t});
   G.stations[index]={};
   toast(`${s.recipe.emoji} plated ${quality>=.9?'perfectly':quality>=.65?'ok':'late'}`);
@@ -255,7 +343,9 @@ function renderHolding(){
   if(!G.holding.length){$('holding').innerHTML='<small>No dishes prepared.</small>';return}
   $('holding').innerHTML=G.holding.map(f=>{
     const q=foodQuality(f);
-    return`<div class="food ${q<.55?'stale':''}" data-food="${f.id}"><b>${f.recipe.emoji} ${f.recipe.name}</b><span class="quality">${Math.round(q*100)}% quality</span></div>`
+    const pct=Math.round(q*100);
+    const cls=q>=.8?'fresh':q>=.55?'ok':'stale';
+    return`<div class="food ${cls}" data-food="${f.id}"><b>${f.recipe.emoji} ${f.recipe.name}</b><small class="freshness ${cls}">${pct}%</small></div>`
   }).join('');
   document.querySelectorAll('[data-food]').forEach(el=>{
     el.addEventListener('pointerdown',e=>startDrag(e,'food',el.dataset.food));
@@ -271,7 +361,9 @@ function pickRecipe(){
 
 function spawnCustomer(){
   const behaviour=BEHAVIOURS[Math.floor(Math.random()*BEHAVIOURS.length)],recipe=pickRecipe();
-  G.customers.push({id:G.nextId++,face:FACES[(G.nextId-2)%FACES.length],recipe,pat:behaviour.pat,patMax:behaviour.pat,behaviour:behaviour.name});
+  const pat=G.doubleOrder?behaviour.pat*2:behaviour.pat;
+  if(G.doubleOrder){G.doubleOrder=false;toast('📋 Double Order: Customer patience doubled!')}
+  G.customers.push({id:G.nextId++,face:FACES[(G.nextId-2)%FACES.length],recipe,pat,patMax:pat,behaviour:behaviour.name});
 }
 
 function renderCustomers(){
@@ -288,7 +380,8 @@ function renderCustomers(){
 function serve(customer,food=null,instant=false){
   const pct=Math.max(.25,customer.pat/customer.patMax);
   const quality=instant?1:foodQuality(food);
-  const earned=Math.round(customer.recipe.value*(.42+.58*pct)*quality);
+  let earned=Math.round(customer.recipe.value*(.18+.42*pct)*quality);
+  if(G.luckyClover){earned*=2;G.luckyClover=false;toast('🍀 Lucky Clover: Double revenue!')}
   G.revenue+=earned;G.served++;
   G.customers=G.customers.filter(c=>c!==customer);
   if(food){G.holding=G.holding.filter(f=>f!==food)}
@@ -297,53 +390,27 @@ function serve(customer,food=null,instant=false){
   renderAll();
 }
 
-function renderDeck(){
-  const card=currentCard();
-  $('activeCard').innerHTML=`<strong>✨ ${card.name}</strong><span>${G.pendingCard?'Pick an ingredient from the pantry.':card.desc}</span><span class="card-cost">✨</span>`;
-  const next=nextCard();
-  $('nextCard').innerHTML=`<b>Next card</b><br>${next.name}`;
-  $('staminaBar').style.width=`${G.stam/STAM_MAX*100}%`;
-  $('staminaText').textContent=`${G.stam.toFixed(1)}/${STAM_MAX}`;
-  document.querySelectorAll('[data-card]').forEach(el=>{
-    el.addEventListener('pointerdown',e=>startDrag(e,'card',el.dataset.card));
-  });
-}
-
 function playCard(){
   const card=currentCard();
   if(G.pendingCard){G.pendingCard=null;toast('Cancelled');renderAll();return}
   if(card.target){G.pendingCard=true;toast('Pick an ingredient from the pantry');renderAll();return}
+  if(G.stam<2){toast('Need 2 stamina to play a card');return}
+  G.stam-=2;
   SFX.play('card');card.use(G);toast(`✨ ${card.name}`);advanceCard();renderAll();
-}
-
-function useRequestedSpecial(id){
-  const recipes=[...new Set(G.customers.map(c=>c.recipe))].filter(r=>r.needs.includes(id));
-  const recipe=recipes.sort((a,b)=>{const ca=G.customers.find(c=>c.recipe.id===a.id);const cb=G.customers.find(c=>c.recipe.id===b.id);return(ca?ca.pat:Infinity)-(cb?cb.pat:Infinity)})[0];
-  if(!recipe){toast('No customer wants that ingredient');G.pendingCard=null;renderAll();return}
-  if(startRecipe(recipe,[id],true)){toast(`✨ Requested Special: ${recipe.name}`);advanceCard();G.pendingCard=null}
 }
 
 function advanceCard(){G.cardIndex=(G.cardIndex+1)%G.deck.length}
 
 function rerollDeck(){
-  if(G.stam<3){toast('Need 3 stamina to reroll');return}
-  G.stam-=3;G.deck=shuffle(CARDS);G.cardIndex=0;G.pendingCard=null;
-  SFX.play('discard',.7);toast('Blessing deck rerolled');renderAll();
-}
-
-function renderCats(){
-  $('cats').innerHTML=[{id:'milo',emoji:'🐱',name:'Milo',desc:'Coffee cooks 50% faster'},{id:'ziggy',emoji:'⚡',name:'Ziggy',desc:'Restores 5 stamina at ≤2'},{id:'cleo',emoji:'📋',name:'Cleo',desc:'Serve least-patient instantly'}].map(cat=>{
-    const cd=G.cats[cat.id],ready=cd<=0;
-    return`<div class="cat ${ready?'ready':''}"><button data-cat="${cat.id}" ${cat.id!=='cleo'||!ready?'disabled':''}><strong>${cat.emoji} ${cat.name}</strong><small>${cat.desc}</small><span class="cooldown">${ready?'READY':`${Math.ceil(cd)}s`}</span></button></div>`
-  }).join('');
-  const cleo=document.querySelector('[data-cat="cleo"]');
-  if(cleo)cleo.addEventListener('click',useCleo);
+  if(G.stam<4){toast('Need 4 stamina to refresh');return}
+  G.stam-=4;G.deck=shuffle(CARDS);G.cardIndex=0;G.pendingCard=null;
+  SFX.play('discard',.7);toast('Blessings refreshed');renderAll();
 }
 
 function useCleo(){
-  if(G.cats.cleo>0)return;
+  if(G.cats.cleo>0||G.customers.length===0)return;
   const target=[...G.customers].sort((a,b)=>a.pat-b.pat)[0];
-  if(!target){toast('No customers need Cleo');return}
+  if(!target)return;
   G.cats.cleo=45;serve(target,null,true);toast('📋 Cleo handled the order');renderAll();
 }
 
@@ -355,14 +422,39 @@ function updateHud(){
   $('served').textContent=G.served;
 }
 
-function renderAll(){renderIngredients();renderCookAction();renderStations();renderHolding();renderCustomers();renderDeck();renderCats();updateHud()}
+function renderInlineDeck(){
+  const el=$('deckGridInline');if(!el)return;
+  const cards=[];
+  for(let i=0;i<6;i++){const idx=(G.cardIndex+i)%G.deck.length;cards.push({card:G.deck[idx],idx})}
+  el.innerHTML=cards.map((c,i)=>{
+    return`<div class="deck-card" data-card-idx="${c.idx}" data-position="${i}"><strong>✨ ${c.card.name}</strong><span>${c.card.desc}</span><span class="card-cost" style="color:var(--blue)">⚡2</span></div>`
+  }).join('');
+  $('staminaBarInline').style.width=`${G.stam/STAM_MAX*100}%`;
+  $('staminaTextInline').textContent=`${G.stam.toFixed(1)}/${STAM_MAX}`;
+  const nc=nextCard();
+  $('nextCardPreviewInline').textContent=`Next: ${nc.name}`;
+  $('refreshDeckInline').disabled=G.stam<4;
+  el.querySelectorAll('[data-card-idx]').forEach(btn=>{
+    btn.addEventListener('pointerdown',e=>startCardDragFromModal(e,+btn.dataset.cardIdx));
+  });
+}
+
+function renderAll(){
+  renderStations();renderHolding();renderCustomers();renderInlineDeck();updateHud();
+  if(!$('pantryModal').classList.contains('hidden'))renderPantryModal();
+  if(!$('deckModal').classList.contains('hidden'))renderDeckModal();
+  if(!$('buffModal').classList.contains('hidden'))renderBuffModal();
+}
 
 function endRun(){
   if(G.over)return;G.over=true;G.running=false;
   const net=G.revenue-START_COST;
   SFX.play(net>=0?'win':'lose');
   $('endTitle').textContent=net>=0?'Shift Profitable!':'Shift Closed';
+  $('endTitle').style.color=net>=0?'var(--green)':'var(--red)';
   $('endText').innerHTML=`You served <b>${G.served}</b> customers.<br>Revenue: <b>💰${G.revenue}</b><br>Cost: <b>💰${START_COST}</b><br>Net: <b>${net>=0?'+':''}${net}</b>`;
+  const dialog=$('endOverlay').querySelector('.dialog');
+  dialog.style.borderColor=net>=0?'var(--green)':'var(--red)';
   $('endOverlay').classList.remove('hidden');
 }
 
@@ -372,12 +464,14 @@ function tick(ts){
   G.stam=Math.min(STAM_MAX,G.stam+STAM_REGEN*dt);
   for(const i of G.ingredients){if(i.stock<3){i.regenLeft-=dt;if(i.regenLeft<=0){i.stock++;i.regenLeft=i.stock<3?i.regen:0;SFX.play('pickup',.3)}}}
   for(const s of G.stations){if(!s.recipe)continue;if(s.remaining>0)s.remaining=Math.max(0,s.remaining-dt);else s.readyAge+=dt}
-  for(const c of[...G.customers]){c.pat-=dt;if(c.pat<=0){G.customers=G.customers.filter(x=>x!==c);toast(`${c.face} left!`);SFX.play('walkout',.8)}}
+  if(G.t>=G.napUntil){for(const c of[...G.customers]){c.pat-=dt;if(c.pat<=0){G.customers=G.customers.filter(x=>x!==c);toast(`${c.face} left!`);SFX.play('walkout',.8)}}}
   for(const id of Object.keys(G.cats))if(G.cats[id]>0)G.cats[id]=Math.max(0,G.cats[id]-dt);
   if(G.cats.ziggy<=0&&G.stam<=2){G.cats.ziggy=20;G.stam=Math.min(STAM_MAX,G.stam+5);SFX.play('rush',.7);toast('⚡ Ziggy restored 5 stamina')}
+  if(G.cats.cleo<=0&&G.customers.length>0){const target=[...G.customers].sort((a,b)=>a.pat-b.pat)[0];if(target){G.cats.cleo=45;serve(target,null,true);toast('📋 Cleo auto-served an order')}}
   G.spawnIn-=dt;
-  const maxCrowd=G.t>170?11:G.t>75?9:7;
-  if(G.spawnIn<=0&&G.customers.length<maxCrowd){spawnCustomer();SFX.play('spawn',.5);G.spawnIn=Math.max(2.6,4.8-G.t*.004)}
+  const maxCrowd=6;
+  if(G.spawnIn<=0&&G.customers.length<maxCrowd){spawnCustomer();SFX.play('spawn',.5);G.spawnIn=Math.max(3.2,5.0-G.t*.003)}
+  if(G.customers.length>=maxCrowd)G.spawnIn=Math.max(G.spawnIn,2);
   if(G.t>=RUN_SECONDS){endRun();return}
   renderAll();requestAnimationFrame(tick);
 }
@@ -387,10 +481,11 @@ const DRAG_THRESHOLD=8;
 let dragStartX=0,dragStartY=0,dragStarted=false;
 
 function ghostHtml(type,data){
-  if(type==='ingredient'){const i=ingredient(data);return`${i.emoji} ${i.name}`}
+  if(type==='ingredient'){const i=ingredient(data);return i?`${i.emoji} ${i.name}`:'Ingredient'}
   if(type==='food'){const f=G.holding.find(x=>x.id===data);return f?`${f.recipe.emoji} ${f.recipe.name}`:'Food'}
-  if(type==='card'){const c=currentCard();return`✨ ${c.name}`}
-  return'';
+  if(type==='stationFood'){const s=G.stations[data];return s&&s.recipe?`${s.recipe.emoji} ${s.recipe.name}`:'Dish'}
+  if(type==='card'){const c=G.deck[data];return c?`✨ ${c.name}`:'Card'}
+  return''
 }
 
 function startDrag(e,type,data){
@@ -400,14 +495,24 @@ function startDrag(e,type,data){
   G.drag={type,data,srcEl:e.currentTarget};
 }
 
+function startCardDragFromModal(e,cardIdx){
+  if(!G.running||G.drag)return;
+  e.preventDefault();
+  dragStartX=e.clientX;dragStartY=e.clientY;dragStarted=false;
+  G.drag={type:'card',data:cardIdx,srcEl:e.currentTarget,fromModal:true};
+}
+
 function commitDrag(){
   const d=G.drag;
+  if(d.fromModal){closeDeck()}
   $('ghost').innerHTML=ghostHtml(d.type,d.data);
   $('ghost').classList.add('show');
   SFX.play('pickup',.6);
   if(d.srcEl)d.srcEl.classList.add('lifted');
   if(d.type==='ingredient'){
     document.querySelectorAll('.station.empty').forEach(el=>el.classList.add('hover-ok'));
+  }else if(d.type==='food'){
+    document.querySelectorAll('.customer').forEach(el=>el.classList.add('hover-ok'));
   }
   moveGhost(d.clientX||dragStartX,d.clientY||dragStartY);
 }
@@ -417,6 +522,7 @@ function moveGhost(x,y){$('ghost').style.left=x+'px';$('ghost').style.top=y+'px'
 function clearAllHover(){
   G.customers.forEach(c=>{if(c.el)c.el.classList.remove('hover-ok','hover-bad')});
   document.querySelectorAll('.station').forEach(el=>el.classList.remove('hover-ok','hover-bad'));
+  document.querySelectorAll('.customer').forEach(el=>el.classList.remove('hover-ok','hover-bad'));
 }
 
 function onDragMove(e){
@@ -432,28 +538,15 @@ function onDragMove(e){
   moveGhost(e.clientX,e.clientY);
   clearAllHover();
   const d=G.drag;
-
   if(d.type==='ingredient'){
     const st=stationAt(e.clientX,e.clientY);
-    if(st!==null){
-      const el=document.querySelector(`[data-station="${st}"]`);
-      if(el)el.classList.add('hover-ok');
-    }
+    if(st!==null){const el=document.querySelector(`[data-station="${st}"]`);if(el)el.classList.add('hover-ok')}
   }else if(d.type==='food'){
     const c=customerAt(e.clientX,e.clientY);
     if(c&&c.el){
       const food=G.holding.find(f=>f.id===d.data);
       const valid=food&&c.recipe.id===food.recipe.id;
       c.el.classList.add(valid?'hover-ok':'hover-bad');
-    }
-  }else if(d.type==='card'){
-    const card=currentCard();
-    if(card.target){
-      const ing=ingredientAt(e.clientX,e.clientY);
-      if(ing){
-        const el=document.querySelector(`[data-ingredient="${ing}"]`);
-        if(el)el.classList.add('selected');
-      }
     }
   }
 }
@@ -464,8 +557,6 @@ function onDragEnd(e){
   if(!dragStarted){
     G.drag=null;
     if(drag.type==='food'){handleFoodClick(drag.data)}
-    else if(drag.type==='ingredient'){handleIngredientClick(drag.data)}
-    else if(drag.type==='card'){handleCardClick()}
     return;
   }
   const d=drag;
@@ -477,25 +568,41 @@ function onDragEnd(e){
   if(d.type==='ingredient'){
     const st=stationAt(e.clientX,e.clientY);
     if(st!==null)dropIngredientOnStation(d.data,st);
-    else{SFX.play('drop',.5)}
+    else SFX.play('drop',.5);
   }else if(d.type==='food'){
     const c=customerAt(e.clientX,e.clientY);
     if(c){const food=G.holding.find(f=>f.id===d.data);if(food){
       if(c.recipe.id===food.recipe.id)serve(c,food);
       else{toast('Wrong order!');SFX.play('wrong',.7)}
-    }}else{SFX.play('drop',.5)}
+    }}else SFX.play('drop',.5);
+  }else if(d.type==='stationFood'){
+    const c=customerAt(e.clientX,e.clientY);
+    const s=G.stations[d.data];
+    if(c&&s&&s.recipe){
+      const progress=Math.min(1,(s.total-s.remaining)/s.total);
+      let quality;
+      if(progress<.82)quality=Math.max(.25,progress/.82*.72);
+      else if(s.remaining>0)quality=.8;
+      else quality=Math.max(.35,1-s.readyAge*.035);
+      if(G.goldenWhisk){quality=1;G.goldenWhisk=false;toast('✨ Golden Whisk: Perfect quality!')}
+      const food={id:crypto.randomUUID(),recipe:s.recipe,quality,heldAt:G.t};
+      G.stations[d.data]={};
+      if(c.recipe.id===food.recipe.id)serve(c,food);
+      else{toast('Wrong order!');SFX.play('wrong',.7)}
+    }else SFX.play('drop',.5);
   }else if(d.type==='card'){
-    const card=currentCard();
-    if(card.target){
-      const ing=ingredientAt(e.clientX,e.clientY);
-      if(ing)useRequestedSpecial(ing);
-      else{toast('Cancelled');G.pendingCard=null;renderAll()}
+    const card=G.deck[d.data];
+    if(!card)return;
+    const onBoard=document.elementFromPoint(e.clientX,e.clientY);
+    const isOnUI=onBoard&&(onBoard.closest('.modal-overlay')||onBoard.closest('.action-bar')||onBoard.closest('header'));
+    if(!isOnUI){
+      if(G.stam<2){toast('Need 2 stamina to play a card');renderAll();return}
+      G.stam-=2;
+      SFX.play('card');card.use(G);toast(`✨ ${card.name}`);advanceCard();
     }else{
-      const onBoard=document.elementFromPoint(e.clientX,e.clientY);
-      const isOnDeck=onBoard&&(onBoard.closest('.deck')||onBoard.closest('#activeCard'));
-      if(!isOnDeck){SFX.play('card');card.use(G);toast(`✨ ${card.name}`);advanceCard();renderAll()}
-      else{SFX.play('drop',.5)}
+      toast(`${card.name} wasted!`);advanceCard();
     }
+    renderAll();
   }
 }
 
@@ -507,25 +614,12 @@ function cancelDrag(){
   G.drag=null;dragStarted=false;
 }
 
-function handleIngredientClick(id){
-  const item=ingredient(id);
-  if(G.pendingCard){useRequestedSpecial(id);return}
-  if(item.stock<1)return;
-  const idx=G.selectedIngredients.indexOf(id);
-  if(idx>=0)G.selectedIngredients.splice(idx,1);
-  else if(G.selectedIngredients.length<2)G.selectedIngredients.push(id);
-  else{G.selectedIngredients=[G.selectedIngredients[1],id]}
-  renderIngredients();renderCookAction();
-}
-
 function handleFoodClick(foodId){
   const food=G.holding.find(f=>f.id===foodId);if(!food)return;
   const matching=G.customers.find(c=>c.recipe.id===food.recipe.id);
   if(matching)serve(matching,food);
   else toast('No customer wants this right now');
 }
-
-function handleCardClick(){playCard()}
 
 function dropIngredientOnStation(ingId,stationIndex){
   const item=ingredient(ingId);
@@ -535,35 +629,14 @@ function dropIngredientOnStation(ingId,stationIndex){
   G.selectedIngredients.push(ingId);
   if(G.selectedIngredients.length>2)G.selectedIngredients.shift();
   const recipe=recipeFor(G.selectedIngredients);
-  if(recipe){
-    startRecipe(recipe,G.selectedIngredients);
-    G.selectedIngredients=[];
-  }else{
-    toast(`${item.emoji} selected — add another ingredient`);
-  }
+  if(recipe){startRecipe(recipe,G.selectedIngredients);G.selectedIngredients=[]}
+  else toast(`${item.emoji} selected — add another ingredient`);
   renderAll();
 }
 
-function stationAt(x,y){
-  const el=document.elementFromPoint(x,y);
-  const btn=el&&el.closest?el.closest('.station'):null;
-  if(!btn||btn.classList.contains('ready'))return null;
-  return+btn.dataset.station;
-}
-
-function customerAt(x,y){
-  const el=document.elementFromPoint(x,y);
-  const btn=el&&el.closest?el.closest('.customer'):null;
-  if(!btn)return null;
-  return G.customers.find(c=>String(c.id)===btn.dataset.customer)||null;
-}
-
-function ingredientAt(x,y){
-  const el=document.elementFromPoint(x,y);
-  const btn=el&&el.closest?el.closest('.ingredient'):null;
-  if(!btn)return null;
-  return btn.dataset.ingredient||null;
-}
+function stationAt(x,y){const el=document.elementFromPoint(x,y);const btn=el&&el.closest?el.closest('.station'):null;if(!btn||btn.classList.contains('ready'))return null;return+btn.dataset.station}
+function customerAt(x,y){const el=document.elementFromPoint(x,y);const btn=el&&el.closest?el.closest('.customer'):null;if(!btn)return null;return G.customers.find(c=>String(c.id)===btn.dataset.customer)||null}
+function ingredientAt(x,y){const el=document.elementFromPoint(x,y);const btn=el&&el.closest?el.closest('.pantry-item'):null;if(!btn)return null;return btn.dataset.ingredient||null}
 
 window.addEventListener('pointermove',onDragMove,{passive:true});
 window.addEventListener('pointerup',onDragEnd);
@@ -571,7 +644,19 @@ window.addEventListener('pointercancel',cancelDrag);
 window.addEventListener('contextmenu',e=>{if(G&&G.drag)e.preventDefault()});
 
 /* ============ INIT ============ */
-$('rerollButton').addEventListener('click',rerollDeck);
+$('deckBtn').addEventListener('click',openDeck);
+$('buffBtn').addEventListener('click',openBuffs);
+$('buffBtnMobile').addEventListener('click',openBuffs);
+$('pantryCloseBtn').addEventListener('click',closePantry);
+$('deckCloseBtn').addEventListener('click',closeDeck);
+$('buffCloseBtn').addEventListener('click',closeBuffs);
+$('refreshDeck').addEventListener('click',rerollDeck);
+$('refreshDeckInline').addEventListener('click',rerollDeck);
+$('pantryModal').addEventListener('click',e=>{if(e.target===$('pantryModal'))closePantry()});
+$('deckModal').addEventListener('click',e=>{if(e.target===$('deckModal'))closeDeck()});
+$('buffModal').addEventListener('click',e=>{if(e.target===$('buffModal'))closeBuffs()});
+$('stations').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-station]');if(!el)return;const idx=+el.dataset.station;if(!G.stations[idx].recipe)openPantry(idx)});
+$('pantryGrid').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-ingredient]');if(!el)return;handlePantryClick(el.dataset.ingredient)});
 $('startButton').addEventListener('click',()=>{
   SFX.unlock();G=newGame();G.running=true;last=performance.now();
   $('startOverlay').classList.add('hidden');renderAll();requestAnimationFrame(tick);
