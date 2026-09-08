@@ -19,13 +19,21 @@ header{padding:10px 18px;border-bottom:3px solid var(--wood);background:var(--pa
 .stamina{background:var(--blue)}
 main{display:flex;flex-direction:column;gap:0;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 section{padding:16px;max-width:850px;margin-left:auto;margin-right:auto;width:100%}
-.section-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:900;margin:0 0 8px}
+.section-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:900;margin:0}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.section-btn{padding:4px 12px;border:2px solid var(--wood);border-radius:8px;background:var(--panel2);color:var(--cream);font:inherit;font-weight:800;font-size:11px;cursor:pointer;white-space:nowrap}
+.section-btn:hover{border-color:var(--accent);background:var(--wood)}
+.recipe-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;text-align:left}
+.recipe-entry{padding:8px;background:var(--panel2);border:2px solid var(--wood);border-radius:8px}
+.recipe-entry .recipe-name{font-weight:900;font-size:13px}
+.recipe-entry .recipe-ingredients{font-size:11px;color:var(--cream);opacity:.8;margin-top:2px}
+.recipe-entry .recipe-stats{font-size:10px;color:var(--accent);margin-top:2px}
 .stations-hint{margin:0 0 8px;color:#bda78e;font-size:12px}
 .action-bar{display:flex;gap:8px;padding:10px 16px;background:var(--panel);border-top:2px solid var(--wood);border-bottom:2px solid var(--wood);flex-shrink:0}
 .action-btn{flex:1;padding:12px 8px;border:2px solid var(--wood);border-radius:10px;background:var(--panel2);color:var(--cream);font:inherit;font-weight:900;font-size:14px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
 .action-btn:hover{border-color:var(--accent);background:var(--wood)}
 .stations{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.station{position:relative;min-height:160px;border:3px solid var(--wood);border-radius:16px;background:var(--panel);padding:14px;cursor:pointer;text-align:center;overflow:hidden}
+.station{position:relative;min-height:160px;border:3px solid var(--wood);border-radius:16px;background:var(--panel);padding:14px;cursor:pointer;text-align:center;overflow:hidden;touch-action:none}
 .station:hover{border-color:var(--accent)}
 .station.empty{display:flex;align-items:center;justify-content:center;flex-direction:column;color:#bda78e;min-height:120px}
 .station.hover-ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(138,199,106,.55)}
@@ -37,8 +45,9 @@ section{padding:16px;max-width:850px;margin-left:auto;margin-right:auto;width:10
 .station.ready{border-color:var(--green);animation:pulse 1s infinite}
 .station.early{border-color:var(--red)}
 @keyframes pulse{50%{box-shadow:0 0 14px rgba(138,199,106,.5)}}
-.holding-list{display:flex;gap:8px;flex-wrap:wrap;min-height:36px;align-items:flex-start}
-.food{position:relative;width:140px;text-align:left;padding:7px;border:2px solid var(--wood);background:var(--panel2);border-radius:8px;cursor:grab;touch-action:none;display:flex;justify-content:space-between;align-items:center}
+.holding-list{display:flex;gap:8px;flex-wrap:wrap;min-height:52px;align-items:flex-start;touch-action:none;border:2px dashed transparent;border-radius:8px;padding:8px;transition:border-color .15s,background .15s}
+.holding-list.hover-ok{border-color:var(--green);background:rgba(138,199,106,.15)}
+.food{position:relative;width:150px;text-align:left;padding:12px;min-height:52px;box-sizing:border-box;border:2px solid var(--wood);background:var(--panel2);border-radius:8px;cursor:grab;touch-action:none;display:flex;justify-content:space-between;align-items:center}
 .food:active{cursor:grabbing}
 .food.stale{border-color:var(--red)}
 .food.lifted{opacity:.22}
@@ -47,7 +56,7 @@ section{padding:16px;max-width:850px;margin-left:auto;margin-right:auto;width:10
 .food .freshness.ok{color:var(--yellow)}
 .food .freshness.stale{color:var(--red)}
 .customers{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start}
-.customer{position:relative;text-align:left;background:var(--panel);border:2px solid var(--wood);border-radius:10px;padding:7px;min-height:101px}
+.customer{position:relative;text-align:left;background:var(--panel);border:2px solid var(--wood);border-radius:10px;padding:7px;min-height:101px;touch-action:none}
 .customer.hover-ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(138,199,106,.55)}
 .customer.hover-bad{border-color:var(--red);box-shadow:0 0 0 3px rgba(221,105,87,.55)}
 .customer .face{font-size:27px}
@@ -158,7 +167,7 @@ section{padding:16px;max-width:850px;margin-left:auto;margin-right:auto;width:10
     <div id="customers" class="customers"></div>
   </section>
   <section class="section-holding">
-    <h2 class="section-title">Prepared Food</h2>
+    <div class="section-header"><h2 class="section-title">Prepared Food</h2><button id="recipesBtn" class="section-btn">📖 Recipes</button></div>
     <div id="holding" class="holding-list"></div>
   </section>
   <section class="section-stations">
@@ -204,7 +213,14 @@ section{padding:16px;max-width:850px;margin-left:auto;margin-right:auto;width:10
     <button class="modal-close" id="buffCloseBtn">Close</button>
   </div>
 </div>
-<div id="startOverlay" class="modal-overlay"><div class="dialog"><h1>Morning Prep</h1><p>You paid <b>💰500</b> to open the cafe. Keep more than you spent over a five-minute shift.</p><ul><li>Open the <b>Pantry</b> to select ingredients, then cook at a station.</li><li>Ingredients slowly restock to three portions.</li><li>Tap a station to plate food when ready.</li><li>Drag prepared food onto matching customers to serve.</li><li>Open <b>Deck</b> to drag out and play blessing cards.</li></ul><button id="startButton">Open the Cafe</button></div></div>
+<div id="recipesModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>📖 Recipes</h2>
+    <div id="recipesGrid" class="recipe-grid"></div>
+    <button class="modal-close" id="recipesCloseBtn">Close</button>
+  </div>
+</div>
+<div id="startOverlay" class="modal-overlay"><div class="dialog"><h1>Morning Prep</h1><p>You paid <b>💰500</b> to open the cafe. Keep more than you spent over a five-minute shift.</p><ul><li>Open the <b>Pantry</b> to select ingredients, then cook at a station.</li><li>Ingredients slowly restock to three portions.</li><li>Tap a station to plate food when ready.</li><li>Drag prepared food onto matching customers to serve.</li><li>Open <b>Deck</b> to drag out and play blessing cards.</li></ul><button id="startButton" onclick="SFX.unlock();G=newGame();G.running=true;last=performance.now();$('startOverlay').classList.add('hidden');renderAll();requestAnimationFrame(tick)">Open the Cafe</button></div></div>
 <div id="endOverlay" class="modal-overlay hidden"><div class="dialog"><h1 id="endTitle"></h1><p id="endText"></p><button onclick="location.reload()">New Shift</button></div></div>
 <div id="ghost"></div>
 <script>
@@ -276,9 +292,6 @@ function renderDeckModal(){
   $('nextCardPreview').innerHTML=`<b>Next:</b> ${nc.name}`;
   const rf=$('refreshDeck');
   rf.disabled=G.stam<4;
-  document.querySelectorAll('[data-card-idx]').forEach(el=>{
-    el.addEventListener('pointerdown',e=>startCardDragFromModal(e,+el.dataset.cardIdx));
-  });
 }
 
 function openBuffs(){if(!G.running)return;$('buffModal').classList.remove('hidden');renderBuffModal()}
@@ -288,6 +301,14 @@ function renderBuffModal(){
   $('buffGrid').innerHTML=cats.map(cat=>{
     const cd=G.cats[cat.id],ready=cd<=0;
     return`<div class="buff-item ${ready?'ready':''}"><span class="buff-emoji">${cat.emoji}</span><div class="buff-info"><strong>${cat.name}</strong><small>${cat.desc}</small></div><span class="buff-cooldown">${ready?'READY':`${Math.ceil(cd)}s`}</span></div>`
+  }).join('');
+}
+function openRecipes(){$('recipesModal').classList.remove('hidden');renderRecipesModal()}
+function closeRecipes(){$('recipesModal').classList.add('hidden')}
+function renderRecipesModal(){
+  $('recipesGrid').innerHTML=RECIPES.map(r=>{
+    const ingNames=r.needs.map(id=>{const i=ingredient(id);return i?`${i.emoji} ${i.name}`:id});
+    return`<div class="recipe-entry"><div class="recipe-name">${r.emoji} ${r.name}</div><div class="recipe-ingredients">${ingNames.join(' + ')}</div><div class="recipe-stats">${r.time}s cook · 💰${r.value}${r.coffee?' · ☕ Coffee':''}</div></div>`
   }).join('');
 }
 
@@ -313,9 +334,6 @@ function renderStations(){
     const dragAttr=ready?`data-station-food="${index}"`:``;
     return`<div class="station ${ready?'ready':''} ${early?'early':''}" data-station="${index}" ${dragAttr} style="--progress:${progress*100}%"><div class="ring"><div class="ring-inner"><div class="dish">${s.recipe.emoji}</div><div class="time">${time}</div></div></div><b>${s.recipe.name}</b><div class="status">${label}</div><small>${ready?'Drag to serve':'Cooking...'}</small></div>`
   }).join('');
-  document.querySelectorAll('[data-station-food]').forEach(el=>{
-    el.addEventListener('pointerdown',e=>startDrag(e,'stationFood',+el.dataset.stationFood));
-  });
 }
 
 function plateStation(index){
@@ -347,9 +365,6 @@ function renderHolding(){
     const cls=q>=.8?'fresh':q>=.55?'ok':'stale';
     return`<div class="food ${cls}" data-food="${f.id}"><b>${f.recipe.emoji} ${f.recipe.name}</b><small class="freshness ${cls}">${pct}%</small></div>`
   }).join('');
-  document.querySelectorAll('[data-food]').forEach(el=>{
-    el.addEventListener('pointerdown',e=>startDrag(e,'food',el.dataset.food));
-  });
 }
 
 function pickRecipe(){
@@ -434,9 +449,6 @@ function renderInlineDeck(){
   const nc=nextCard();
   $('nextCardPreviewInline').textContent=`Next: ${nc.name}`;
   $('refreshDeckInline').disabled=G.stam<4;
-  el.querySelectorAll('[data-card-idx]').forEach(btn=>{
-    btn.addEventListener('pointerdown',e=>startCardDragFromModal(e,+btn.dataset.cardIdx));
-  });
 }
 
 function renderAll(){
@@ -520,9 +532,9 @@ function commitDrag(){
 function moveGhost(x,y){$('ghost').style.left=x+'px';$('ghost').style.top=y+'px'}
 
 function clearAllHover(){
-  G.customers.forEach(c=>{if(c.el)c.el.classList.remove('hover-ok','hover-bad')});
   document.querySelectorAll('.station').forEach(el=>el.classList.remove('hover-ok','hover-bad'));
   document.querySelectorAll('.customer').forEach(el=>el.classList.remove('hover-ok','hover-bad'));
+  $('holding').classList.remove('hover-ok');
 }
 
 function onDragMove(e){
@@ -543,11 +555,15 @@ function onDragMove(e){
     if(st!==null){const el=document.querySelector(`[data-station="${st}"]`);if(el)el.classList.add('hover-ok')}
   }else if(d.type==='food'){
     const c=customerAt(e.clientX,e.clientY);
-    if(c&&c.el){
+    if(c){
       const food=G.holding.find(f=>f.id===d.data);
       const valid=food&&c.recipe.id===food.recipe.id;
-      c.el.classList.add(valid?'hover-ok':'hover-bad');
+      const el=document.querySelector(`[data-customer="${c.id}"]`);
+      if(el)el.classList.add(valid?'hover-ok':'hover-bad');
     }
+  }else if(d.type==='stationFood'){
+    const h=holdingAt(e.clientX,e.clientY);
+    if(h)$('holding').classList.add('hover-ok');
   }
 }
 
@@ -577,8 +593,9 @@ function onDragEnd(e){
     }}else SFX.play('drop',.5);
   }else if(d.type==='stationFood'){
     const c=customerAt(e.clientX,e.clientY);
+    const h=holdingAt(e.clientX,e.clientY);
     const s=G.stations[d.data];
-    if(c&&s&&s.recipe){
+    if(s&&s.recipe){
       const progress=Math.min(1,(s.total-s.remaining)/s.total);
       let quality;
       if(progress<.82)quality=Math.max(.25,progress/.82*.72);
@@ -587,8 +604,9 @@ function onDragEnd(e){
       if(G.goldenWhisk){quality=1;G.goldenWhisk=false;toast('✨ Golden Whisk: Perfect quality!')}
       const food={id:crypto.randomUUID(),recipe:s.recipe,quality,heldAt:G.t};
       G.stations[d.data]={};
-      if(c.recipe.id===food.recipe.id)serve(c,food);
-      else{toast('Wrong order!');SFX.play('wrong',.7)}
+      if(c&&c.recipe.id===food.recipe.id)serve(c,food);
+      else if(h){G.holding.push(food);SFX.play('pickup',.7);toast(`${food.recipe.emoji} plated`)}
+      else{toast('Drop on a customer or prepared section');SFX.play('drop',.5)}
     }else SFX.play('drop',.5);
   }else if(d.type==='card'){
     const card=G.deck[d.data];
@@ -637,6 +655,7 @@ function dropIngredientOnStation(ingId,stationIndex){
 function stationAt(x,y){const el=document.elementFromPoint(x,y);const btn=el&&el.closest?el.closest('.station'):null;if(!btn||btn.classList.contains('ready'))return null;return+btn.dataset.station}
 function customerAt(x,y){const el=document.elementFromPoint(x,y);const btn=el&&el.closest?el.closest('.customer'):null;if(!btn)return null;return G.customers.find(c=>String(c.id)===btn.dataset.customer)||null}
 function ingredientAt(x,y){const el=document.elementFromPoint(x,y);const btn=el&&el.closest?el.closest('.pantry-item'):null;if(!btn)return null;return btn.dataset.ingredient||null}
+function holdingAt(x,y){const el=document.elementFromPoint(x,y);return el&&el.closest&&el.closest('#holding')}
 
 window.addEventListener('pointermove',onDragMove,{passive:true});
 window.addEventListener('pointerup',onDragEnd);
@@ -655,12 +674,21 @@ $('refreshDeckInline').addEventListener('click',rerollDeck);
 $('pantryModal').addEventListener('click',e=>{if(e.target===$('pantryModal'))closePantry()});
 $('deckModal').addEventListener('click',e=>{if(e.target===$('deckModal'))closeDeck()});
 $('buffModal').addEventListener('click',e=>{if(e.target===$('buffModal'))closeBuffs()});
-$('stations').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-station]');if(!el)return;const idx=+el.dataset.station;if(!G.stations[idx].recipe)openPantry(idx)});
-$('pantryGrid').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-ingredient]');if(!el)return;handlePantryClick(el.dataset.ingredient)});
-$('startButton').addEventListener('click',()=>{
-  SFX.unlock();G=newGame();G.running=true;last=performance.now();
-  $('startOverlay').classList.add('hidden');renderAll();requestAnimationFrame(tick);
+$('recipesBtn').addEventListener('click',openRecipes);
+$('recipesCloseBtn').addEventListener('click',closeRecipes);
+$('recipesModal').addEventListener('click',e=>{if(e.target===$('recipesModal'))closeRecipes()});
+$('stations').addEventListener('pointerdown',e=>{
+  const foodEl=e.target.closest('[data-station-food]');
+  if(foodEl){startDrag(e,'stationFood',+foodEl.dataset.stationFood);return}
+  const el=e.target.closest('[data-station]');
+  if(!el)return;
+  const idx=+el.dataset.station;
+  if(!G.stations[idx].recipe)openPantry(idx);
 });
+$('pantryGrid').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-ingredient]');if(!el)return;handlePantryClick(el.dataset.ingredient)});
+$('holding').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-food]');if(!el)return;startDrag(e,'food',el.dataset.food)});
+$('deckGrid').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-card-idx]');if(!el)return;startCardDragFromModal(e,+el.dataset.cardIdx)});
+$('deckGridInline').addEventListener('pointerdown',e=>{const el=e.target.closest('[data-card-idx]');if(!el)return;startCardDragFromModal(e,+el.dataset.cardIdx)});
 G=newGame();renderAll();
 </script>
 </body>
