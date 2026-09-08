@@ -229,7 +229,7 @@ const $=id=>document.getElementById(id);
 const SFX=(()=>{const bank={};let muted=false,unlocked=false;const files=['pickup','drop','serve','wrong','card','spawn','walkout','discard','rush','win','lose','button'];function unlock(){if(unlocked)return;files.forEach(n=>{try{bank[n]=new Audio(`sfx/${n}.wav`);bank[n].preload='auto'}catch(e){}});unlocked=true}function play(name,vol=1){if(muted||!unlocked)return;const s=bank[name];if(!s)return;const i=s.cloneNode();i.volume=Math.min(1,Math.max(0,vol));i.play().catch(()=>{})}return{unlock,play,toggleMute(){muted=!muted;return muted},get muted(){return muted}}})();
 const RUN_SECONDS=300,START_COST=500,STAM_MAX=12,STAM_REGEN=.085,HOLD_FRESH=34;
 const INGREDIENTS=[{id:'beans',emoji:'🫘',name:'Coffee Beans',regen:24},{id:'milk',emoji:'🥛',name:'Milk',regen:20},{id:'flour',emoji:'🌾',name:'Flour',regen:27},{id:'fish',emoji:'🐟',name:'Fish',regen:30},{id:'berry',emoji:'🫐',name:'Berries',regen:25},{id:'sugar',emoji:'🍬',name:'Sugar',regen:22}];
-const RECIPES=[{id:'pawccino',name:'Pawccino',emoji:'☕',needs:['beans','milk'],time:34,value:50,coffee:true},{id:'mocha',name:'Sweet Mocha',emoji:'🍫',needs:['beans','sugar'],time:38,value:60,coffee:true},{id:'warmmilk',name:'Berry Milk',emoji:'🥤',needs:['milk','berry'],time:30,value:42},{id:'cake',name:'Berry Cake',emoji:'🍰',needs:['flour','berry'],time:42,value:72},{id:'fishpie',name:'Fish Pie',emoji:'🥧',needs:['fish','flour'],time:45,value:88},{id:'treats',name:'Sweet Treats',emoji:'🍪',needs:['flour','sugar'],time:35,value:52},{id:'fishcream',name:'Creamy Fish',emoji:'🍲',needs:['fish','milk'],time:39,value:68}];
+const RECIPES=[{id:'pawccino',name:'Pawccino',emoji:'☕',needs:['beans','milk'],time:17,value:38,coffee:true},{id:'mocha',name:'Sweet Mocha',emoji:'🍫',needs:['beans','sugar'],time:19,value:45,coffee:true},{id:'warmmilk',name:'Berry Milk',emoji:'🥤',needs:['milk','berry'],time:15,value:32},{id:'cake',name:'Berry Cake',emoji:'🍰',needs:['flour','berry'],time:21,value:54},{id:'fishpie',name:'Fish Pie',emoji:'🥧',needs:['fish','flour'],time:23,value:66},{id:'treats',name:'Sweet Treats',emoji:'🍪',needs:['flour','sugar'],time:18,value:39},{id:'fishcream',name:'Creamy Fish',emoji:'🍲',needs:['fish','milk'],time:20,value:51}];
 const CARDS=[{id:'turbo',name:'Turbo Whisk',desc:'Cut remaining cook time by 40%.',use:g=>g.stations.forEach(s=>{if(s.recipe&&s.remaining>0)s.remaining*=.6})},{id:'bloom',name:'Pantry Bloom',desc:'Advance every ingredient restock by 12s.',use:g=>g.ingredients.forEach(i=>{if(i.stock<3)i.regenLeft=Math.max(0,i.regenLeft-12)})},{id:'warm',name:'Keep Warm',desc:'Pause freshness decay for 18s.',use:g=>g.warmUntil=g.t+18},{id:'refund',name:'Ingredient Refund',desc:'Refund one ingredient on your next cook.',use:g=>g.refundNext=true},{id:'focus',name:'Barista Focus',desc:'Restore 4 stamina, next dish cooks 25% faster.',use:g=>{g.stam=Math.min(STAM_MAX,g.stam+4);g.focus=true}},{id:'lucky',name:'Lucky Clover',desc:'Next dish served earns double revenue.',use:g=>g.luckyClover=true},{id:'nap',name:'Cat Nap',desc:'Pause all customer timers for 8 seconds.',use:g=>{g.napUntil=g.t+8;toast('😴 Cat Nap: Customers paused!')}},{id:'double',name:'Double Order',desc:'Next customer arrives with doubled patience.',use:g=>g.doubleOrder=true},{id:'golden',name:'Golden Whisk',desc:'Restore your held food to perfect quality.',use:g=>{if(!g.holding.length){toast('No food to restore');return}const f=g.holding[g.holding.length-1];f.quality=1;toast(`✨ Golden Whisk: ${f.recipe.name} restored!`)}}];
 const BEHAVIOURS=[{name:'impatient',pat:43},{name:'regular',pat:62},{name:'patient',pat:82},{name:'critic',pat:52},{name:'group order',pat:68}];
 const FACES=['🧑','👩','👨','🧓','👵','🧑‍🎤','👩‍💼','👨‍🎨','🧑‍🍳','👩‍🚀','🧑‍🏫','👨‍💻'];
@@ -374,9 +374,11 @@ function pickRecipe(){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 
+const PATIENCE_SCALE=.6;
 function spawnCustomer(){
   const behaviour=BEHAVIOURS[Math.floor(Math.random()*BEHAVIOURS.length)],recipe=pickRecipe();
-  const pat=G.doubleOrder?behaviour.pat*2:behaviour.pat;
+  const base=behaviour.pat*PATIENCE_SCALE;
+  const pat=G.doubleOrder?base*2:base;
   if(G.doubleOrder){G.doubleOrder=false;toast('📋 Double Order: Customer patience doubled!')}
   G.customers.push({id:G.nextId++,face:FACES[(G.nextId-2)%FACES.length],recipe,pat,patMax:pat,behaviour:behaviour.name});
 }
